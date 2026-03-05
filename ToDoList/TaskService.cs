@@ -1,9 +1,9 @@
 class TaskService : ITaskService {
-    private readonly ITaskRepository _repository;
+    private readonly IRepository<TaskItem> _repository;
     private readonly List<TaskItem> _tasks;
-    public TaskService(ITaskRepository repository) {
+    public TaskService(IRepository<TaskItem> repository) {
         _repository = repository;
-        _tasks = _repository.LoadTasks();
+        _tasks = _repository.Load();
     }
     public IEnumerable<TaskItem> GetAllTasks() => _tasks;
     public void AddTask(string description, int priority) {
@@ -12,20 +12,20 @@ class TaskService : ITaskService {
         var newTask = new TaskItem { Id = newId, Description =
         description, Status = -1, Priority = priority};
         _tasks.Add(newTask);
-        _repository.SaveTasks(_tasks);
+        _repository.Save(_tasks);
     }
     public void RemoveTask(int id) {
         var task = _tasks.Find(t => t.Id == id);
         if (task != null) {
             _tasks.Remove(task);
-            _repository.SaveTasks(_tasks);
+            _repository.Save(_tasks);
         }
     }
     public void ToggleTaskStatus(int id, int status) {
         var task = _tasks.Find(t => t.Id == id);
         if (task != null && status < 2) {
             task.Status = status;
-            _repository.SaveTasks(_tasks);
+            _repository.Save(_tasks);
         }
     }
 } 

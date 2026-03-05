@@ -19,5 +19,12 @@
     "Status": -1,
     "Priority": 0,
     "CreationDate": "2026-03-05T15:27:41.7976982+01:00"
+  },
+  {
+    "Id": 4,
+    "Description": "Testing updated generic repository",
+    "Status": 1,
+    "Priority": 1,
+    "CreationDate": "2026-03-05T15:50:23.4707915+01:00"
   }
 ]
