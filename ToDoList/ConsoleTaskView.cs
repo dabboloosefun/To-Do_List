@@ -1,4 +1,6 @@
 
+using System.Diagnostics;
+
 public class ConsoleTaskView : ITaskView {
     private readonly ITaskService _service;
 
@@ -10,7 +12,19 @@ public class ConsoleTaskView : ITaskView {
         Console.Clear();
         Console.WriteLine("==== ToDo List ====");
         foreach (var task in tasks)
-        Console.WriteLine($"{task}");
+        {
+            if (task.Status == -1) Console.WriteLine($"To Do: {task.Description}, {task.Id}");
+        }
+        Console.WriteLine("==== In Progress List ====");
+        foreach (var task in tasks)
+        {
+            if (task.Status == 0) Console.WriteLine($"In Progress: {task.Description}, {task.Id}");
+        }
+        Console.WriteLine("==== Done List ====");
+        foreach (var task in tasks)
+        {
+            if (task.Status == 1) Console.WriteLine($"Done: {task.Description}, {task.Id}");
+        }
     }
 
     string Prompt(string prompt) {
@@ -40,13 +54,22 @@ public class ConsoleTaskView : ITaskView {
                     break;
                 case "3":
                     string toggleIdStr = Prompt ("Enter task id to toggle: ");
+                    Console.WriteLine("1. To Do");
+                    Console.WriteLine("2. In Progress");
+                    Console.WriteLine("3. Done");
+                    string statusOption =Prompt("Select an option: ");
                     if (int.TryParse(toggleIdStr, out int toggleId)) {
-                        _service.ToggleTaskCompletion(toggleId);
+                        _service.ToggleTaskStatus(toggleId, statusOption switch {
+                            "1" => -1,
+                            "2" => 0,
+                            "3" => 1,
+                            _ => 2                            
+                        });
                     }
                     break;
                 case "4":
                     return;
-                    default:
+                default:
                     Console.WriteLine("Invalid option. Press any key to continue...");
                     Console.ReadKey();
                     break;

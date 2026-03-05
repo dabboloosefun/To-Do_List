@@ -10,7 +10,7 @@ class TaskService : ITaskService {
         int newId = _tasks.Count > 0 ? _tasks[_tasks.Count - 1].Id + 1 :
         1;
         var newTask = new TaskItem { Id = newId, Description =
-        description, Completed = false };
+        description, Status = -1 };
         _tasks.Add(newTask);
         _repository.SaveTasks(_tasks);
     }
@@ -21,10 +21,10 @@ class TaskService : ITaskService {
             _repository.SaveTasks(_tasks);
         }
     }
-    public void ToggleTaskCompletion(int id) {
+    public void ToggleTaskStatus(int id, int status) {
         var task = _tasks.Find(t => t.Id == id);
-        if (task != null) {
-            task.Completed = !task.Completed;
+        if (task != null && status < 2) {
+            task.Status = status;
             _repository.SaveTasks(_tasks);
         }
     }
