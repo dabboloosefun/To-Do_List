@@ -6,11 +6,11 @@ class TaskService : ITaskService {
         _tasks = _repository.LoadTasks();
     }
     public IEnumerable<TaskItem> GetAllTasks() => _tasks;
-    public void AddTask(string description) {
+    public void AddTask(string description, int priority) {
         int newId = _tasks.Count > 0 ? _tasks[_tasks.Count - 1].Id + 1 :
         1;
         var newTask = new TaskItem { Id = newId, Description =
-        description, Status = -1 };
+        description, Status = -1, Priority = priority};
         _tasks.Add(newTask);
         _repository.SaveTasks(_tasks);
     }

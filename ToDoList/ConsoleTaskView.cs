@@ -13,17 +13,35 @@ public class ConsoleTaskView : ITaskView {
         Console.WriteLine("==== ToDo List ====");
         foreach (var task in tasks)
         {
-            if (task.Status == -1) Console.WriteLine($"To Do: {task.Description}, {task.Id}");
+            if (task.Status == -1) Console.WriteLine($"To Do: [{task.Id}] [{task.Priority switch
+            {
+                -1 => "Low",
+                0 => "Medium",
+                1 => "High",
+                _ => "None"
+            }}] {task.Description}");
         }
         Console.WriteLine("==== In Progress List ====");
         foreach (var task in tasks)
         {
-            if (task.Status == 0) Console.WriteLine($"In Progress: {task.Description}, {task.Id}");
+            if (task.Status == 0) Console.WriteLine($"In Progress: [{task.Id}] [{task.Priority switch
+            {
+                -1 => "Low",
+                0 => "Medium",
+                1 => "High",
+                _ => "None"
+            }}] {task.Description}");
         }
         Console.WriteLine("==== Done List ====");
         foreach (var task in tasks)
         {
-            if (task.Status == 1) Console.WriteLine($"Done: {task.Description}, {task.Id}");
+            if (task.Status == 1) Console.WriteLine($"Done: [{task.Id}] [{task.Priority switch
+            {
+                -1 => "Low",
+                0 => "Medium",
+                1 => "High",
+                _ => "None"
+            }}] {task.Description}");
         }
     }
 
@@ -43,8 +61,31 @@ public class ConsoleTaskView : ITaskView {
             string option=Prompt("Select an option: ");
             switch (option) {
                 case "1":
+                    bool validPriority = false;
+                    bool looped = false;
+
                     string description = Prompt ("Enter task description: ");
-                        _service.AddTask(description);
+
+                    while (!validPriority)
+                    {
+                        Console.WriteLine("1. Low");
+                        Console.WriteLine("2. Medium");
+                        Console.WriteLine("3. High");
+                        if (looped) Console.WriteLine("Invalid priority choice. Please enter 1 2 or 3.");
+                        string priorityStr = Prompt ("Choose task priority: ");
+                        if (int.TryParse(priorityStr, out int priority))
+                        {
+                            if (priority > 3 || priority < 1)
+                            {
+                                looped = true;
+                            }
+                            if (priority < 4 && priority > 0)
+                            {
+                                _service.AddTask(description, priority -2);
+                                validPriority = true;
+                            }
+                        }
+                    }
                     break;
                 case "2":
                     string removeIdStr = Prompt ("Enter task id to remove: ");

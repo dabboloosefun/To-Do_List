@@ -1,22 +1,23 @@
 [
   {
     "Id": 1,
-    "Description": "balls",
-    "Status": -1
+    "Description": "Add Status, Priority, CreationDate, and Priority to Tasks",
+    "Status": 0,
+    "Priority": 1,
+    "CreationDate": "2026-03-05T15:22:28.0406138+01:00"
+  },
+  {
+    "Id": 2,
+    "Description": "Chechking wether the prios work",
+    "Status": -1,
+    "Priority": -1,
+    "CreationDate": "2026-03-05T15:27:24.5049974+01:00"
   },
   {
     "Id": 3,
-    "Description": "treason",
-    "Status": 0
-  },
-  {
-    "Id": 4,
-    "Description": "gurgle",
-    "Status": 1
-  },
-  {
-    "Id": 5,
-    "Description": "sloppy",
-    "Status": -1
+    "Description": "Final quick check for prios (Medium)",
+    "Status": -1,
+    "Priority": 0,
+    "CreationDate": "2026-03-05T15:27:41.7976982+01:00"
   }
 ]
