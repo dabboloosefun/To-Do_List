@@ -1,11 +1,14 @@
 
+using System.ComponentModel.Design;
 using System.Diagnostics;
 
 public class ConsoleTaskView : ITaskView {
-    private readonly ITaskService _service;
+    private readonly ITaskService _taskService;
+    private readonly IMemberService _memberService;
 
-    public ConsoleTaskView(ITaskService service) {
-        _service = service;
+    public ConsoleTaskView(ITaskService taskService, IMemberService memberService) {
+        _taskService = taskService;
+        _memberService = memberService;
     }
     
     void DisplayTasks(IEnumerable<TaskItem> tasks) {
@@ -51,8 +54,24 @@ public class ConsoleTaskView : ITaskView {
     }
 
     public void Run() {
-        while (true) {
-            DisplayTasks(_service.GetAllTasks());
+        bool LoggedIn = false;
+        Member? member = null;
+        bool failedOnce = false;
+        while (!LoggedIn)
+        {
+            Console.Clear();
+            if (failedOnce) Console.WriteLine("Incorrect account details, please try again.");
+            Console.WriteLine("Please log in to your company account");
+            string name = Prompt("Enter your account name: "); 
+            string password = Prompt("Enter your password: ");
+            var result = _memberService.LogIn(name, password);
+            member = result.Item2;
+            LoggedIn = result.Item1;
+            failedOnce = true;
+        }
+        while (LoggedIn) {
+            DisplayTasks(_taskService.GetAllTasks());
+            Console.WriteLine($"\n[{member!.Name}]");
             Console.WriteLine("\nOptions:");
             Console.WriteLine("1. Add Task");
             Console.WriteLine("2. Remove Task");
@@ -81,7 +100,7 @@ public class ConsoleTaskView : ITaskView {
                             }
                             if (priority < 4 && priority > 0)
                             {
-                                _service.AddTask(description, priority -2);
+                                _taskService.AddTask(description, priority -2);
                                 validPriority = true;
                             }
                         }
@@ -90,7 +109,7 @@ public class ConsoleTaskView : ITaskView {
                 case "2":
                     string removeIdStr = Prompt ("Enter task id to remove: ");
                     if (int.TryParse(removeIdStr, out int removeId)) {
-                        _service.RemoveTask(removeId);
+                        _taskService.RemoveTask(removeId);
                     }
                     break;
                 case "3":
@@ -100,7 +119,7 @@ public class ConsoleTaskView : ITaskView {
                     Console.WriteLine("3. Done");
                     string statusOption =Prompt("Select an option: ");
                     if (int.TryParse(toggleIdStr, out int toggleId)) {
-                        _service.ToggleTaskStatus(toggleId, statusOption switch {
+                        _taskService.ToggleTaskStatus(toggleId, statusOption switch {
                             "1" => -1,
                             "2" => 0,
                             "3" => 1,

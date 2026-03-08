@@ -1,10 +1,13 @@
 ﻿class Program {
     static void Main(string[] args){
     // Dependency injection: wiring up our components
-        string filePath = "tasks.json";
-        IRepository<TaskItem> repository = new JsonRepository<TaskItem>(filePath);
-        ITaskService service = new TaskService(repository);
-        ITaskView view = new ConsoleTaskView(service);
+        string TfilePath = "tasks.json";
+        string MfilePath = "members.json";
+        IRepository<TaskItem> taskRepository = new JsonRepository<TaskItem>(TfilePath);
+        IRepository<Member> memberRepository = new JsonRepository<Member>(MfilePath);
+        ITaskService taskService = new TaskService(taskRepository);
+        IMemberService memberService = new MemberService(memberRepository);
+        ITaskView view = new ConsoleTaskView(taskService, memberService);
         // Run the view
         view.Run();
     }
