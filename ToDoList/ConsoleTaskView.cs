@@ -60,7 +60,7 @@ public class ConsoleTaskView : ITaskView {
         while (!LoggedIn)
         {
             Console.Clear();
-            if (failedOnce) Console.WriteLine("Incorrect account details, please try again.");
+            if (failedOnce) Console.WriteLine("\nIncorrect account details, please try again.");
             Console.WriteLine("Please log in to your company account");
             string name = Prompt("Enter your account name: "); 
             string password = Prompt("Enter your password: ");
