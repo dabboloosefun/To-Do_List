@@ -1,4 +1,4 @@
-public class MyCollection<T> : IMyCollection<T>
+public class MyArray<T> : IMyArray<T>
 {
     private T[] _items = new T[0];
     private int _count = 0;
@@ -97,9 +97,9 @@ public class MyCollection<T> : IMyCollection<T>
         return default;
     }
 
-    public IMyCollection<T> Filter(Func<T, bool> predicate)
+    public IMyArray<T> Filter(Func<T, bool> predicate)
     {
-        MyCollection<T> result = new MyCollection<T>();
+        MyArray<T> result = new MyArray<T>();
         IMyIterator<T> iterator = GetIterator();
 
         while (iterator.HasNext())

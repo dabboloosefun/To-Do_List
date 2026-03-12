@@ -1,11 +1,11 @@
-public interface IMyCollection<T>
+public interface IMyArray<T>
 {
     int Count {get;}
     bool Dirty {get; set;}
     void Add(T item); //return index
     void Remove(T item);
     T FindBy<K>(K key, Func<T, K, int> comparer);
-    IMyCollection<T> Filter(Func<T, bool> predicate);
+    IMyArray<T> Filter(Func<T, bool> predicate);
     void Sort(Comparison<T> comparison);
     R Reduce<R>(Func<R ,T ,R> accumulator);
     //OR
