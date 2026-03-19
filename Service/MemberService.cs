@@ -14,6 +14,18 @@ public class MemberService : IMemberService {
         _Members.Add(newMember);
         _repository.Save(_Members);
     }
+
+    public Member? GetMemberById(int id)
+    {
+        foreach (Member m in _Members)
+        {
+            if (m.Id == id)
+            {
+                return m;
+            }
+        }
+        return null;
+    }
     public void RemoveMember(int id) {
         var Member = _Members.Find(m => m.Id == id);
         if (Member != null) {

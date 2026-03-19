@@ -4,6 +4,9 @@
     "Description": "Add Status, Priority, CreationDate, and Priority to Tasks",
     "Status": 1,
     "Priority": 1,
+    "AssignedMembers": [
+      1
+    ],
     "CreationDate": "2026-03-05T15:22:28.0406138+01:00"
   },
   {
@@ -11,6 +14,7 @@
     "Description": "Chechking wether the prios work",
     "Status": -1,
     "Priority": -1,
+    "AssignedMembers": [],
     "CreationDate": "2026-03-05T15:27:24.5049974+01:00"
   },
   {
@@ -18,6 +22,7 @@
     "Description": "Final quick check for prios (Medium)",
     "Status": -1,
     "Priority": 0,
+    "AssignedMembers": [],
     "CreationDate": "2026-03-05T15:27:41.7976982+01:00"
   },
   {
@@ -25,6 +30,7 @@
     "Description": "Testing updated generic repository",
     "Status": 1,
     "Priority": 1,
+    "AssignedMembers": [],
     "CreationDate": "2026-03-05T15:50:23.4707915+01:00"
   },
   {
