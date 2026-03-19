@@ -56,5 +56,31 @@
     "Priority": -1,
     "AssignedMembers": [],
     "CreationDate": "2026-03-12T15:23:45.9259005+01:00"
+  },
+  {
+    "Id": 8,
+    "Description": "Test auto assignment",
+    "Status": -1,
+    "Priority": -1,
+    "AssignedMembers": [],
+    "CreationDate": "2026-03-19T18:05:28.503666+01:00"
+  },
+  {
+    "Id": 9,
+    "Description": "Test again",
+    "Status": -1,
+    "Priority": -1,
+    "AssignedMembers": [],
+    "CreationDate": "2026-03-19T18:06:44.4043082+01:00"
+  },
+  {
+    "Id": 10,
+    "Description": "sadhbasd",
+    "Status": -1,
+    "Priority": 0,
+    "AssignedMembers": [
+      1
+    ],
+    "CreationDate": "2026-03-19T18:12:10.4957292+01:00"
   }
 ]

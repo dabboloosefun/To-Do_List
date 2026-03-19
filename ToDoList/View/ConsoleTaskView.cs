@@ -56,7 +56,7 @@ public class ConsoleTaskView : ITaskView {
     public void Run() {
         bool LoggedIn = false;
         Member? member = null;
-        while(!LoggedIn)
+        while(!LoggedIn && member == null)
         {
             Console.WriteLine("Please log in to continue:");
             string name = Prompt("Please input you name: ");
@@ -66,8 +66,9 @@ public class ConsoleTaskView : ITaskView {
             LoggedIn = result.Item1;
             member = result.Item2;
         }
-        while (LoggedIn) {
+        while (LoggedIn && member != null) {
             DisplayTasks(_taskService.GetAllTasks());
+            Console.WriteLine($"Currently logged in as {member.Name} [{member.Id}]");
             Console.WriteLine("\nOptions:");
             Console.WriteLine("1. Add Task");
             Console.WriteLine("2. Remove Task");
@@ -98,7 +99,7 @@ public class ConsoleTaskView : ITaskView {
                             }
                             if (priority < 4 && priority > 0)
                             {
-                                _taskService.AddTask(description, priority -2, assignYourself.ToLower().Contains("y") ? new List<int>(member.Id) : null);
+                                _taskService.AddTask(description, priority -2, assignYourself.ToLower().Contains('y') ? new List<int> {member.Id} : null);
                                 validPriority = true;
                             }
                         }

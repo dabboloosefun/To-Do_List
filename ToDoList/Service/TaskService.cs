@@ -37,7 +37,7 @@ class TaskService : ITaskService {
         }
     }
 
-    public void AddTask(string description, int priority, List<int>? assignedMembers = null) {
+    public void AddTask(string description, int priority, List<int>? assignedMembers) {
         int newId = _tasks.Count > 0 ? _tasks[_tasks.Count - 1].Id + 1 :
         1;
         var newTask = new TaskItem(assignedMembers) { Id = newId, Description =
