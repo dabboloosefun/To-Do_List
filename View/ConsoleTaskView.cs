@@ -1,15 +1,12 @@
 
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Xml;
 
 public class ConsoleTaskView : ITaskView {
-    private readonly ITaskService _taskService;
-    private readonly IMemberService _memberService;
+    private readonly ITaskService _service;
 
-    public ConsoleTaskView(ITaskService taskService, IMemberService memberService) {
-        _taskService = taskService;
-        _memberService = memberService;
+    public ConsoleTaskView(ITaskService service) {
+        _service = service;
     }
     
     void DisplayTasks(IEnumerable<TaskItem> tasks) {
@@ -55,24 +52,8 @@ public class ConsoleTaskView : ITaskView {
     }
 
     public void Run() {
-        bool LoggedIn = false;
-        Member? member = null;
-        bool failedOnce = false;
-        while (!LoggedIn)
-        {
-            Console.Clear();
-            if (failedOnce) Console.WriteLine("\nIncorrect account details, please try again.");
-            Console.WriteLine("Please log in to your company account");
-            string name = Prompt("Enter your account name: "); 
-            string password = Prompt("Enter your password: ");
-            var result = _memberService.LogIn(name, password);
-            member = result.Item2;
-            LoggedIn = result.Item1;
-            failedOnce = true;
-        }
-        while (LoggedIn) {
-            DisplayTasks(_taskService.GetAllTasks());
-            Console.WriteLine($"\n[{member!.Name}]");
+        while (true) {
+            DisplayTasks(_service.GetAllTasks());
             Console.WriteLine("\nOptions:");
             Console.WriteLine("1. Add Task");
             Console.WriteLine("2. Remove Task");
@@ -112,7 +93,7 @@ public class ConsoleTaskView : ITaskView {
                 case "2":
                     string removeIdStr = Prompt ("Enter task id to remove: ");
                     if (int.TryParse(removeIdStr, out int removeId)) {
-                        _taskService.RemoveTask(removeId);
+                        _service.RemoveTask(removeId);
                     }
                     break;
                 case "3":
@@ -122,7 +103,7 @@ public class ConsoleTaskView : ITaskView {
                     Console.WriteLine("3. Done");
                     string statusOption =Prompt("Select an option: ");
                     if (int.TryParse(toggleIdStr, out int toggleId)) {
-                        _taskService.ToggleTaskStatus(toggleId, statusOption switch {
+                        _service.ToggleTaskStatus(toggleId, statusOption switch {
                             "1" => -1,
                             "2" => 0,
                             "3" => 1,
