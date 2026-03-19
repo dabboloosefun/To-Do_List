@@ -34,7 +34,9 @@ public class MemberService : IMemberService {
         }
     }
     public Tuple<bool, Member?> LogIn(string name, string password) {
+        Console.WriteLine(_Members);
         var Member = _Members.Find(m => m.Name == name);
+        Console.WriteLine(Member);
         if (Member != null && Member.Password == password) {
             return new Tuple<bool, Member?>(true, Member);
         }
