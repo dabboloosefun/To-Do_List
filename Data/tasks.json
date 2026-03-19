@@ -2,7 +2,7 @@
   {
     "Id": 1,
     "Description": "Add Status, Priority, CreationDate, and Priority to Tasks",
-    "Status": 0,
+    "Status": 1,
     "Priority": 1,
     "CreationDate": "2026-03-05T15:22:28.0406138+01:00"
   },
@@ -26,5 +26,26 @@
     "Status": 1,
     "Priority": 1,
     "CreationDate": "2026-03-05T15:50:23.4707915+01:00"
+  },
+  {
+    "Id": 5,
+    "Description": "ass",
+    "Status": -1,
+    "Priority": 1,
+    "CreationDate": "2026-03-12T15:23:36.8999294+01:00"
+  },
+  {
+    "Id": 6,
+    "Description": "poop",
+    "Status": -1,
+    "Priority": 0,
+    "CreationDate": "2026-03-12T15:23:42.4343134+01:00"
+  },
+  {
+    "Id": 7,
+    "Description": "pee",
+    "Status": -1,
+    "Priority": -1,
+    "CreationDate": "2026-03-12T15:23:45.9259005+01:00"
   }
 ]
