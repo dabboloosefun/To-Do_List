@@ -1,6 +1,7 @@
 
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Xml;
 
 public class ConsoleTaskView : ITaskView {
     private readonly ITaskService _taskService;
@@ -131,16 +132,20 @@ public class ConsoleTaskView : ITaskView {
                     break;
                 case "4":
                     string taskIdstr = Prompt("Please enter a task ID: ");
-                    if (int.TryParse(taskIdstr, out int taskId) && _taskService.GetTaskById(taskId) != null)
+                    if (int.TryParse(taskIdstr, out int taskId))
                     {
-                        if (int.TryParse(Prompt("How many members would you like to assign? "), out int memberAmount))
+                        TaskItem? task = _taskService.GetTaskById(taskId);
+                        if (task != null && int.TryParse(Prompt("How many members would you like to assign? "), out int memberAmount))
                         {
                             for (int i = 0; i < memberAmount; i++)
                             {
-                                
+                                if (int.TryParse(Prompt("Input member id: "), out int memberIdOut))
+                                {
+                                    if (_memberService.GetMemberById(memberIdOut) != null && !task.AssignedMembers.Contains(memberIdOut)) task.AssignedMembers.Add(memberIdOut);
+                                }
                             }
+                            _taskService.UpdateTask(task);
                         }
-                        ;
                     }
                     break;
                 case "5":
