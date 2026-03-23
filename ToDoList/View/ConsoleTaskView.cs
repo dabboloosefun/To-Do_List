@@ -1,17 +1,19 @@
-
 using System.Diagnostics;
 using System.Xml;
 
-public class ConsoleTaskView : ITaskView {
+public class ConsoleTaskView : ITaskView
+{
     private readonly ITaskService _taskService;
     private readonly IMemberService _memberService;
 
-    public ConsoleTaskView(ITaskService taskService,IMemberService memberService) {
+    public ConsoleTaskView(ITaskService taskService, IMemberService memberService)
+    {
         _taskService = taskService;
         _memberService = memberService;
     }
-    
-    void DisplayTasks(IEnumerable<TaskItem> tasks) {
+
+    void DisplayTasks(IEnumerable<TaskItem> tasks)
+    {
         Console.Clear();
         Console.WriteLine("==== ToDo List ====");
         foreach (var task in tasks)
@@ -48,15 +50,17 @@ public class ConsoleTaskView : ITaskView {
         }
     }
 
-    string Prompt(string prompt) {
+    string Prompt(string prompt)
+    {
         Console.Write(prompt);
         return Console.ReadLine();
     }
 
-    public void Run() {
+    public void Run()
+    {
         bool LoggedIn = false;
         Member? member = null;
-        while(!LoggedIn && member == null)
+        while (!LoggedIn && member == null)
         {
             Console.WriteLine("Please log in to continue:");
             string name = Prompt("Please input you name: ");
@@ -66,7 +70,8 @@ public class ConsoleTaskView : ITaskView {
             LoggedIn = result.Item1;
             member = result.Item2;
         }
-        while (LoggedIn && member != null) {
+        while (LoggedIn && member != null)
+        {
             DisplayTasks(_taskService.GetAllTasks());
             Console.WriteLine($"Currently logged in as {member.Name} [{member.Id}]");
             Console.WriteLine("\nOptions:");
@@ -74,14 +79,16 @@ public class ConsoleTaskView : ITaskView {
             Console.WriteLine("2. Remove Task");
             Console.WriteLine("3. Toggle Task State");
             Console.WriteLine("4. Manage Task Assignment");
-            Console.WriteLine("5. Exit");
-            string option=Prompt("Select an option: ");
-            switch (option) {
+            Console.WriteLine("5. Filter Tasks");
+            Console.WriteLine("6. Exit");
+            string option = Prompt("Select an option: ");
+            switch (option)
+            {
                 case "1":
                     bool validPriority = false;
                     bool looped = false;
 
-                    string description = Prompt ("Enter task description: ");
+                    string description = Prompt("Enter task description: ");
 
                     while (!validPriority)
                     {
@@ -89,7 +96,7 @@ public class ConsoleTaskView : ITaskView {
                         Console.WriteLine("2. Medium");
                         Console.WriteLine("3. High");
                         if (looped) Console.WriteLine("Invalid priority choice. Please enter 1 2 or 3.");
-                        string priorityStr = Prompt ("Choose task priority: ");
+                        string priorityStr = Prompt("Choose task priority: ");
                         string assignYourself = Prompt("Would you like to assign yourself? (y/n): ");
                         if (int.TryParse(priorityStr, out int priority))
                         {
@@ -99,30 +106,33 @@ public class ConsoleTaskView : ITaskView {
                             }
                             if (priority < 4 && priority > 0)
                             {
-                                _taskService.AddTask(description, priority -2, assignYourself.ToLower().Contains('y') ? new List<int> {member.Id} : null);
+                                _taskService.AddTask(description, priority - 2, assignYourself.ToLower().Contains('y') ? new List<int> { member.Id } : null);
                                 validPriority = true;
                             }
                         }
                     }
                     break;
                 case "2":
-                    string removeIdStr = Prompt ("Enter task id to remove: ");
-                    if (int.TryParse(removeIdStr, out int removeId)) {
+                    string removeIdStr = Prompt("Enter task id to remove: ");
+                    if (int.TryParse(removeIdStr, out int removeId))
+                    {
                         _taskService.RemoveTask(removeId);
                     }
                     break;
                 case "3":
-                    string toggleIdStr = Prompt ("Enter task id to toggle: ");
+                    string toggleIdStr = Prompt("Enter task id to toggle: ");
                     Console.WriteLine("1. To Do");
                     Console.WriteLine("2. In Progress");
                     Console.WriteLine("3. Done");
-                    string statusOption =Prompt("Select an option: ");
-                    if (int.TryParse(toggleIdStr, out int toggleId)) {
-                        _taskService.ToggleTaskStatus(toggleId, statusOption switch {
+                    string statusOption = Prompt("Select an option: ");
+                    if (int.TryParse(toggleIdStr, out int toggleId))
+                    {
+                        _taskService.ToggleTaskStatus(toggleId, statusOption switch
+                        {
                             "1" => -1,
                             "2" => 0,
                             "3" => 1,
-                            _ => 2                            
+                            _ => 2
                         });
                     }
                     break;
@@ -137,7 +147,8 @@ public class ConsoleTaskView : ITaskView {
                             {
                                 if (int.TryParse(Prompt("Input member id: "), out int memberIdOut))
                                 {
-                                    if (_memberService.GetMemberById(memberIdOut) != null && !task.AssignedMembers.Contains(memberIdOut)) task.AssignedMembers.Add(memberIdOut);
+                                    if (_memberService.GetMemberById(memberIdOut) != null && !task.AssignedMembers.Contains(memberIdOut))
+                                        task.AssignedMembers.Add(memberIdOut);
                                 }
                             }
                             _taskService.UpdateTask(task);
@@ -145,6 +156,78 @@ public class ConsoleTaskView : ITaskView {
                     }
                     break;
                 case "5":
+                    Console.WriteLine("\nFilter Options:");
+                    Console.WriteLine("1. Filter by Priority");
+                    Console.WriteLine("2. Filter by Status");
+                    Console.WriteLine("3. Filter by Date");
+                    string filterOption = Prompt("Select filter: ");
+
+                    switch (filterOption)
+                    {
+                        case "1":
+                            Console.WriteLine("1. Low");
+                            Console.WriteLine("2. Medium");
+                            Console.WriteLine("3. High");
+                            string priorityStr = Prompt("Select priority: ");
+                            if (int.TryParse(priorityStr, out int priorityFilter))
+                            {
+                                int priorityValue = priorityFilter switch
+                                {
+                                    1 => -1,
+                                    2 => 0,
+                                    3 => 1,
+                                    _ => -99
+                                };
+                                if (priorityValue != -99)
+                                {
+                                    DisplayTasks(_taskService.GetTasksByPriority(priorityValue));
+                                    Prompt("Press Enter to continue...");
+                                }
+                            }
+                            break;
+
+                        case "2":
+                            Console.WriteLine("1. To Do");
+                            Console.WriteLine("2. In Progress");
+                            Console.WriteLine("3. Done");
+                            string statusStr = Prompt("Select status: ");
+                            if (int.TryParse(statusStr, out int statusFilter))
+                            {
+                                int statusValue = statusFilter switch
+                                {
+                                    1 => -1,
+                                    2 => 0,
+                                    3 => 1,
+                                    _ => -99
+                                };
+                                if (statusValue != -99)
+                                {
+                                    DisplayTasks(_taskService.GetTasksByStatus(statusValue));
+                                    Prompt("Press Enter to continue...");
+                                }
+                            }
+                            break;
+
+                        case "3":
+                            string dateStr = Prompt("Enter date (yyyy-MM-dd): ");
+                            if (DateTime.TryParse(dateStr, out DateTime filterDate))
+                            {
+                                DisplayTasks(_taskService.GetTasksByDate(filterDate));
+                                Prompt("Press Enter to continue...");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Invalid date format.");
+                                Prompt("Press Enter to continue...");
+                            }
+                            break;
+
+                        default:
+                            Console.WriteLine("Invalid filter option.");
+                            break;
+                    }
+                    break;
+                case "6":
                     return;
                 default:
                     Console.WriteLine("Invalid option. Press any key to continue...");
@@ -153,4 +236,4 @@ public class ConsoleTaskView : ITaskView {
             }
         }
     }
-} 
+}
