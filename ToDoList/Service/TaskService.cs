@@ -37,26 +37,57 @@ class TaskService : ITaskService {
         }
     }
 
-    public void AddTask(string description, int priority, List<int>? assignedMembers) {
+    public void AddTask(string description, int priority, List<int>? assignedMembers, List<int> dependantOn) {
         int newId = _tasks.Count > 0 ? _tasks[_tasks.Count - 1].Id + 1 :
         1;
-        var newTask = new TaskItem(assignedMembers) { Id = newId, Description =
+        var newTask = new TaskItem(assignedMembers, dependantOn) { Id = newId, Description =
         description, Status = -1, Priority = priority};
         _tasks.Add(newTask);
         _repository.Save(_tasks);
     }
     public void RemoveTask(int id) {
-        var task = _tasks.Find(t => t.Id == id);
+        TaskItem? task = GetTaskById(id);
         if (task != null) {
             _tasks.Remove(task);
             _repository.Save(_tasks);
         }
     }
-    public void ToggleTaskStatus(int id, int status) {
-        var task = _tasks.Find(t => t.Id == id);
-        if (task != null && status < 2) {
-            task.Status = status;
-            _repository.Save(_tasks);
+
+    public bool DependanciesDone(TaskItem item)
+    {
+        int amountDone = 0;
+        foreach (int taskId in item.DependantOn)
+        {
+            TaskItem? dependancy = GetTaskById(taskId);
+            if (dependancy == null)
+            {
+                amountDone--;
+                continue;
+            }
+
+            if (dependancy.Status == 2)
+            {
+                amountDone++;
+                continue;
+            }
+
+            amountDone--;
         }
+        return amountDone >= item.DependantOn.Count ? true : false;
+    }
+
+    public bool ToggleTaskStatus(int id, int status) {
+        TaskItem? task = GetTaskById(id);
+
+        if (task != null && status < 2) {
+            if (DependanciesDone(task)) 
+            {
+                task.Status = status;
+                _repository.Save(_tasks);
+                return true;
+            }
+        }
+        
+        return false;
     }
 } 
