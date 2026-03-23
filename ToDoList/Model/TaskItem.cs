@@ -9,7 +9,7 @@ public class TaskItem
     public List<int> DependantOn { get; set; }
     public DateTime CreationDate { get; set; }
 
-    public TaskItem(List<int>? assignedMembers, List<int>? dependantOn)
+    public TaskItem(List<int>? assignedMembers, List<int>? dependantOn=null)
     {
         CreationDate = DateTime.Now;
         AssignedMembers = assignedMembers == null ? new List<int>() : assignedMembers;
