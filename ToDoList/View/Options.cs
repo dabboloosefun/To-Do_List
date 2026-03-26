@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using System.Xml;
+
 public class Options
 {
     private Member _member { get; set; }
@@ -57,11 +60,35 @@ public class Options
         Console.WriteLine("2. Remove Task");
         Console.WriteLine("3. Toggle Task State");
         Console.WriteLine("4. Manage Task Assignment");
-        Console.WriteLine("5. Filter");
-        Console.WriteLine("6. Manage Task Dependancy");
-        Console.WriteLine("7. Exit");
+        Console.WriteLine("5. Manage Task Dependency");
+        Console.WriteLine("6. Filter");
+        Console.WriteLine("7. Show Dependencies");
+        Console.WriteLine("8. Exit");
 
         return PromptReadKey("");
+    }
+
+    public void ShowDependenciesOption(int taskId, int depth = 0)
+    {
+        TaskItem? task = _taskService.GetTaskById(taskId);
+        if (task == null) return;
+
+        for (int i = 0; i < depth; i++)
+        {
+            Console.Write("\t");
+        }
+
+        if(depth == 0)
+        {
+            Console.Clear();
+            Console.WriteLine($"-[{task.Id}] {task.Description}");
+        }
+
+        else Console.WriteLine($"|-{task.Description}");
+        for (int i = 0; i < task.DependantOn.Count(); i++)
+        {
+            ShowDependenciesOption(task.DependantOn[i], depth + 1);
+        }
     }
 
     public void AddTaskOption(Member member)
@@ -141,7 +168,18 @@ public class Options
     
     public void TaskDependancyOption()
     {
-        throw new NotImplementedException();    
+        string taskIdstr = Prompt("Task Id: ");
+        if (int.TryParse(taskIdstr, out int taskId))
+        {
+            TaskItem? task = _taskService.GetTaskById(taskId);
+            if (task == null) return;
+            string dependencyIdstr = Prompt("Dependency Id: ");
+
+            if (int.TryParse(dependencyIdstr, out int dependencyId))
+            {
+                _taskService.AddDependency(task, dependencyId);
+            }
+        }
     }
 
     public void FilterOption()

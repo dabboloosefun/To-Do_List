@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 class TaskService : ITaskService {
     private readonly IRepository<TaskItem> _repository;
     private readonly IMyArray<TaskItem> _tasks;
@@ -44,9 +47,15 @@ class TaskService : ITaskService {
         SaveTasks();
     }
 
-    public void RemoveTask(int id) {
+    public void RemoveTask(int id, bool removeDepenencies = false) {
         TaskItem? task = GetTaskById(id);
         if (task != null) {
+            for (int i = 0; i < task.DependantOn.Count(); i++)
+            {
+                TaskItem? dependency = GetTaskById(task.DependantOn[i]);
+                if (dependency == null) continue;
+                RemoveTask(dependency.Id);
+            }
             _tasks.Remove(task);
             SaveTasks();
         }
@@ -88,7 +97,51 @@ class TaskService : ITaskService {
         }
     }
 
-    public bool DependanciesDone(TaskItem item)
+    public void RemoveDependency(TaskItem task, int dependencyId)
+    {
+        if (GetTaskById(dependencyId) == null) return;
+        if (task.DependantOn.Contains(dependencyId)) task.DependantOn.Remove(dependencyId);
+        SaveTasks();
+    }
+
+    public void AddDependency(TaskItem task, int dependencyId)
+    {
+        TaskItem? dependency = GetTaskById(dependencyId);
+        if (dependency == null || IsCircular(task.Id, dependency)) return;
+
+        task.DependantOn.Add(dependencyId);
+        SaveTasks();
+    }
+
+    public bool IsCircular(int taskId, TaskItem dependency, HashSet<int>? visited = null)
+    {
+        bool isCircular = false;
+        visited ??= new HashSet<int>{};
+
+        if (!visited.Add(dependency.Id)) return false;
+
+        if (dependency.DependantOn.Contains(taskId))
+        {
+            isCircular = true;
+            return isCircular;
+        }
+
+        for (int i = 0; i < dependency.DependantOn.Count(); i++)
+        {
+            TaskItem? next = GetTaskById(dependency.DependantOn[i]);
+            if (next == null) continue;
+            bool result = IsCircular(taskId, next, visited);
+            if (result == true)
+            {
+                isCircular = true;
+                break;
+            }
+        }
+
+        return isCircular;
+    }
+
+    public bool CanStartTask(TaskItem item)
     {
         int amountDone = 0;
         foreach (int taskId in item.DependantOn)
@@ -100,7 +153,7 @@ class TaskService : ITaskService {
                 continue;
             }
 
-            if (dependancy.Status == 2)
+            if (dependancy.Status == 1)
             {
                 amountDone++;
                 continue;
@@ -115,14 +168,19 @@ class TaskService : ITaskService {
         TaskItem? task = GetTaskById(id);
 
         if (task != null && status < 2) {
-            if (DependanciesDone(task)) 
+            if (CanStartTask(task)) 
             {
                 task.Status = status;
                 _repository.Save(ConvertToEnumerable(_tasks));
                 return true;
             }
         }
-        
+        else if (task != null)
+        {
+            task.Status = -1;
+            _repository.Save(ConvertToEnumerable(_tasks));
+        }
+
         return false;
     }
 }
