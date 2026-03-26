@@ -65,15 +65,24 @@ public class ConsoleTaskView : ITaskView
                     break;
 
                 case "5":
-                    options.FilterOption();
-                    break;
-
-                case "6":
                     options.TaskDependancyOption();
                     break;
 
+                case "6":
+                    options.FilterOption();
+                    break;
 
                 case "7":
+                    string taskIdstr = Prompt("Task Id: ");
+                    if (int.TryParse(taskIdstr, out int taskId))
+                    {
+                        options.ShowDependenciesOption(taskId);
+                    }
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                    break;
+
+                case "8":
                     return;
 
                 default:

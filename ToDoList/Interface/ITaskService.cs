@@ -5,9 +5,12 @@ public interface ITaskService
     IEnumerable<TaskItem> GetTasksByStatus(int status);
     IEnumerable<TaskItem> GetTasksByDate(DateTime date);
     void AddTask(string description, int priority, List<int>? assignedMembers);
-    void RemoveTask(int id);
+    void RemoveTask(int id, bool removeDependencies = false);
     TaskItem? GetTaskById(int id);
     void UpdateTask(TaskItem task);
-    bool DependanciesDone(TaskItem task); 
+    bool CanStartTask(TaskItem task);
+    void RemoveDependency(TaskItem task, int dependencyId);
+    void AddDependency(TaskItem task, int dependencyId);
+    bool IsCircular(int taskId, TaskItem next, HashSet<int>? visited = null);
     bool ToggleTaskStatus(int id, int status);
 }
