@@ -1,17 +1,19 @@
-
 using System.Diagnostics;
 using System.Xml;
 
-public class ConsoleTaskView : ITaskView {
+public class ConsoleTaskView : ITaskView
+{
     private readonly ITaskService _taskService;
     private readonly IMemberService _memberService;
 
-    public ConsoleTaskView(ITaskService taskService,IMemberService memberService) {
+    public ConsoleTaskView(ITaskService taskService, IMemberService memberService)
+    {
         _taskService = taskService;
         _memberService = memberService;
     }
-    
-    void DisplayTasks(IEnumerable<TaskItem> tasks) {
+
+    void DisplayTasks(IEnumerable<TaskItem> tasks)
+    {
         Console.Clear();
         Console.WriteLine("==== ToDo List ====");
         foreach (var task in tasks)
@@ -48,7 +50,8 @@ public class ConsoleTaskView : ITaskView {
         }
     }
 
-    string Prompt(string prompt) {
+    string Prompt(string prompt)
+    {
         Console.Write(prompt);
         return Console.ReadLine();
     }
@@ -190,10 +193,84 @@ public class ConsoleTaskView : ITaskView {
                     break;
 
                 case "5":
-                    TaskDependancyOption();
+                    Console.WriteLine("\nFilter Options:");
+                    Console.WriteLine("1. Filter by Priority");
+                    Console.WriteLine("2. Filter by Status");
+                    Console.WriteLine("3. Filter by Date");
+                    string filterOption = Prompt("Select filter: ");
+
+                    switch (filterOption)
+                    {
+                        case "1":
+                            Console.WriteLine("1. Low");
+                            Console.WriteLine("2. Medium");
+                            Console.WriteLine("3. High");
+                            string priorityStr = Prompt("Select priority: ");
+                            if (int.TryParse(priorityStr, out int priorityFilter))
+                            {
+                                int priorityValue = priorityFilter switch
+                                {
+                                    1 => -1,
+                                    2 => 0,
+                                    3 => 1,
+                                    _ => -99
+                                };
+                                if (priorityValue != -99)
+                                {
+                                    DisplayTasks(_taskService.GetTasksByPriority(priorityValue));
+                                    Prompt("Press Enter to continue...");
+                                }
+                            }
+                            break;
+
+                        case "2":
+                            Console.WriteLine("1. To Do");
+                            Console.WriteLine("2. In Progress");
+                            Console.WriteLine("3. Done");
+                            string statusStr = Prompt("Select status: ");
+                            if (int.TryParse(statusStr, out int statusFilter))
+                            {
+                                int statusValue = statusFilter switch
+                                {
+                                    1 => -1,
+                                    2 => 0,
+                                    3 => 1,
+                                    _ => -99
+                                };
+                                if (statusValue != -99)
+                                {
+                                    DisplayTasks(_taskService.GetTasksByStatus(statusValue));
+                                    Prompt("Press Enter to continue...");
+                                }
+                            }
+                            break;
+
+                        case "3":
+                            string dateStr = Prompt("Enter date (yyyy-MM-dd): ");
+                            if (DateTime.TryParse(dateStr, out DateTime filterDate))
+                            {
+                                DisplayTasks(_taskService.GetTasksByDate(filterDate));
+                                Prompt("Press Enter to continue...");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Invalid date format.");
+                                Prompt("Press Enter to continue...");
+                            }
+                            break;
+
+                        default:
+                            Console.WriteLine("Invalid filter option.");
+                            break;
+                    }
                     break;
 
                 case "6":
+                    TaskDependancyOption();
+                    break;
+
+
+                case "7":
                     return;
 
                 default:
@@ -203,4 +280,4 @@ public class ConsoleTaskView : ITaskView {
             }
         }
     }
-} 
+}

@@ -1,5 +1,9 @@
-public interface ITaskService {
+public interface ITaskService
+{
     IEnumerable<TaskItem> GetAllTasks();
+    IEnumerable<TaskItem> GetTasksByPriority(int priority);
+    IEnumerable<TaskItem> GetTasksByStatus(int status);
+    IEnumerable<TaskItem> GetTasksByDate(DateTime date);
     void AddTask(string description, int priority, List<int>? assignedMembers, List<int>? dependantOn);
     void RemoveTask(int id);
     TaskItem? GetTaskById(int id);
