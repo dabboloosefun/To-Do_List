@@ -4,7 +4,7 @@ public interface ITaskService
     IEnumerable<TaskItem> GetTasksByPriority(int priority);
     IEnumerable<TaskItem> GetTasksByStatus(int status);
     IEnumerable<TaskItem> GetTasksByDate(DateTime date);
-    void AddTask(string description, int priority, List<int>? assignedMembers, List<int>? dependantOn);
+    void AddTask(string description, int priority, List<int>? assignedMembers);
     void RemoveTask(int id);
     TaskItem? GetTaskById(int id);
     void UpdateTask(TaskItem task);

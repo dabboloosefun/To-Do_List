@@ -6,7 +6,7 @@ public class MemberService : IMemberService
     public MemberService(IRepository<Member> repository)
     {
         _repository = repository;
-        List<Member> loaded = _repository.Load();
+        IEnumerable<Member> loaded = _repository.Load();
         _Members = new MyArray<Member>();
 
         foreach (var member in loaded)

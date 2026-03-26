@@ -1,5 +1,5 @@
 public interface IRepository<T>
 {
-    List<T> Load();
-    void Save(List<T> entries);
+    IEnumerable<T> Load();
+    void Save(IEnumerable<T> entries);
 }

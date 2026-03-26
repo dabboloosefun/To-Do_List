@@ -4,7 +4,7 @@ class TaskService : ITaskService {
 
     public TaskService(IRepository<TaskItem> repository) {
         _repository = repository;
-        List<TaskItem> loaded = _repository.Load();
+        IEnumerable<TaskItem> loaded = _repository.Load();
         _tasks = new MyArray<TaskItem>();
         
         foreach (var task in loaded) {
@@ -61,14 +61,6 @@ class TaskService : ITaskService {
         }
     }
 
-    public void ToggleTaskStatus(int id, int status) {
-        var task = GetTaskById(id);
-        if (task != null && status < 2) {
-            task.Status = status;
-            SaveTasks();
-        }
-    }
-
     private int GetLastTaskId() {
         int lastId = 0;
         IMyIterator<TaskItem> iterator = _tasks.GetIterator();
@@ -90,8 +82,12 @@ class TaskService : ITaskService {
 
     private IEnumerable<TaskItem> ConvertToEnumerable(IMyArray<TaskItem> array) {
         IMyIterator<TaskItem> iterator = array.GetIterator();
-        while (iterator.HasNext()) {
+        while (iterator.HasNext()) 
+        {
             yield return iterator.Next();
+        }
+    }
+
     public bool DependanciesDone(TaskItem item)
     {
         int amountDone = 0;
@@ -122,7 +118,7 @@ class TaskService : ITaskService {
             if (DependanciesDone(task)) 
             {
                 task.Status = status;
-                _repository.Save(_tasks);
+                _repository.Save(ConvertToEnumerable(_tasks));
                 return true;
             }
         }
