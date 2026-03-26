@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Xml;
+using CommunityToolkit.Common;
 
 public class Options
 {
@@ -14,61 +15,175 @@ public class Options
         _memberService = memberService;
     }
 
+    public void DisplayTasksTruncated(IEnumerable<TaskItem> tasks)
+    {
+        int headerLength = $"Currently logged in as {_member.Name} [{_member.Id}]".Length + 2;
+        
+        int left = ((Console.WindowWidth - headerLength) / 2) + headerLength;
+        int top = 1;
+        int maxWidth = Console.WindowWidth - left - 1;
+
+        Format.TrueClear();
+        Console.SetCursorPosition(left, top);
+
+        Console.WriteLine("To Do".PadLeft("To Do".Length + (maxWidth - "To Do".Length) / 2, '=').PadRight(maxWidth, '='));
+        foreach (var task in tasks)
+        {
+            
+            if (task.Status == -1) 
+            {
+                top++;
+                Console.SetCursorPosition(left, top);
+                string taskStr = $"{(_taskService.CanStartTask(task) ? "" : "LOCKED")} [{task.Id}] [{task.Priority switch
+                {
+                    -1 => "Low",
+                    0 => "Medium",
+                    1 => "High",
+                    _ => "None"
+                }}] {task.Description}";
+                Console.WriteLine(StringExtensions.Truncate(taskStr, maxWidth));
+            }
+        }
+
+        top += 2;
+        Console.SetCursorPosition(left, top);
+        Console.WriteLine("In Progress".PadLeft("In Progress".Length + (maxWidth - "In Progress".Length) / 2, '=').PadRight(maxWidth, '='));
+        foreach (var task in tasks)
+        {
+            if (task.Status == 0)
+            {
+                top++;
+                Console.SetCursorPosition(left, top);
+                string taskStr = $"[{task.Id}] [{task.Priority switch
+                {
+                    -1 => "Low",
+                    0 => "Medium",
+                    1 => "High",
+                    _ => "None"
+                }}] {task.Description}";
+                Console.WriteLine(StringExtensions.Truncate(taskStr, maxWidth));
+            }
+        }
+
+        top += 2;
+        Console.SetCursorPosition(left, top);
+        Console.WriteLine("Done".PadLeft("Done".Length + (maxWidth - "Done".Length) / 2, '=').PadRight(maxWidth, '='));
+        foreach (var task in tasks)
+        {
+            if (task.Status == 1)
+            {
+                top++;
+                Console.SetCursorPosition(left, top);
+                string taskStr = $"[{task.Id}] [{task.Priority switch
+                {
+                    -1 => "Low",
+                    0 => "Medium",
+                    1 => "High",
+                    _ => "None"
+                }}] {task.Description}";
+                Console.WriteLine(StringExtensions.Truncate(taskStr, maxWidth));
+            }
+        }
+    }
+
     public void DisplayTasks(IEnumerable<TaskItem> tasks)
     {
-        Console.Clear();
-        Console.WriteLine("==== ToDo List ====");
+        int left = 1;
+        int top = 1;
+        int maxWidth = Console.WindowWidth - 2;
+
+        Format.TrueClear();
+        Console.SetCursorPosition(left, top);
+
+        Console.WriteLine("To Do".PadLeft("To Do".Length + (maxWidth - "To Do".Length) / 2, '=').PadRight(maxWidth, '='));
         foreach (var task in tasks)
         {
-            if (task.Status == -1) Console.WriteLine($"To Do: {(_taskService.CanStartTask(task) ? "" : "LOCKED")} [{task.Id}] [{task.Priority switch
+            
+            if (task.Status == -1) 
             {
-                -1 => "Low",
-                0 => "Medium",
-                1 => "High",
-                _ => "None"
-            }}] {task.Description}");
+                top++;
+                Console.SetCursorPosition(left, top);
+                string taskStr = $"{(_taskService.CanStartTask(task) ? "" : "LOCKED")} [{task.Id}] [{task.Priority switch
+                {
+                    -1 => "Low",
+                    0 => "Medium",
+                    1 => "High",
+                    _ => "None"
+                }}] {task.Description}";
+                Format.WriteCentered(StringExtensions.Truncate(taskStr, maxWidth));
+            }
         }
-        Console.WriteLine("==== In Progress List ====");
+
+        top += 2;
+        Console.SetCursorPosition(left, top);
+        Console.WriteLine("In Progress".PadLeft("In Progress".Length + (maxWidth - "In Progress".Length) / 2, '=').PadRight(maxWidth, '='));
         foreach (var task in tasks)
         {
-            if (task.Status == 0) Console.WriteLine($"In Progress: [{task.Id}] [{task.Priority switch
+            if (task.Status == 0)
             {
-                -1 => "Low",
-                0 => "Medium",
-                1 => "High",
-                _ => "None"
-            }}] {task.Description}");
+                top++;
+                Console.SetCursorPosition(left, top);
+                string taskStr = $"[{task.Id}] [{task.Priority switch
+                {
+                    -1 => "Low",
+                    0 => "Medium",
+                    1 => "High",
+                    _ => "None"
+                }}] {task.Description}";
+                Console.WriteLine(StringExtensions.Truncate(taskStr, maxWidth));
+            }
         }
-        Console.WriteLine("==== Done List ====");
+
+        top += 2;
+        Console.SetCursorPosition(left, top);
+        Console.WriteLine("Done".PadLeft("Done".Length + (maxWidth - "Done".Length) / 2, '=').PadRight(maxWidth, '='));
         foreach (var task in tasks)
         {
-            if (task.Status == 1) Console.WriteLine($"Done: [{task.Id}] [{task.Priority switch
+            if (task.Status == 1)
             {
-                -1 => "Low",
-                0 => "Medium",
-                1 => "High",
-                _ => "None"
-            }}] {task.Description}");
+                top++;
+                Console.SetCursorPosition(left, top);
+                string taskStr = $"[{task.Id}] [{task.Priority switch
+                {
+                    -1 => "Low",
+                    0 => "Medium",
+                    1 => "High",
+                    _ => "None"
+                }}] {task.Description}";
+                Console.WriteLine(StringExtensions.Truncate(taskStr, maxWidth));
+            }
         }
     }
 
-    public string? DisplayOptions(Member member)
+    public string? DisplayOptions()
     {
-        Console.WriteLine($"Currently logged in as {member.Name} [{member.Id}]");
-        Console.WriteLine("\nOptions:");
-        Console.WriteLine("1. Add Task");
-        Console.WriteLine("2. Remove Task");
-        Console.WriteLine("3. Toggle Task State");
-        Console.WriteLine("4. Manage Task Assignment");
-        Console.WriteLine("5. Manage Task Dependency");
-        Console.WriteLine("6. Filter");
-        Console.WriteLine("7. Show Dependencies");
-        Console.WriteLine("8. Exit");
+        Format.WriteTitle($"Currently logged in as {_member.Name} [{_member.Id}]");
 
-        return PromptReadKey("");
+        Format.WriteList([
+            "Add Task", "Remove Task", "Toggle Task Status", "Manage Task Assignment", "Manage Task Dependency", "Filter", "Show Dependencies", "Exit"
+            ], (Console.WindowHeight - 8) / 2);
+
+        return Format.PromptReadKey("Select an option: ");
     }
 
-    public void ShowDependenciesOption(int taskId, int depth = 0)
+    public void ShowDependenciesOption()
+    {
+        Format.TrueClear();
+        DisplayTasksTruncated(_taskService.GetAllTasks());
+        Format.WriteTitle("DEPENDANCY GRAPH");
+        Format.CentreCursor();
+
+        string? taskIdstr = Format.Prompt("Enter task Id: ");
+        if (int.TryParse(taskIdstr, out int taskId))
+        {
+            DependencyGraph(taskId);
+        }
+        Format.Pad(1);
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+    }
+
+    public void DependencyGraph(int taskId, int depth = 0)
     {
         TaskItem? task = _taskService.GetTaskById(taskId);
         if (task == null) return;
@@ -80,40 +195,49 @@ public class Options
 
         if(depth == 0)
         {
-            Console.Clear();
+            Format.TrueClear();
+            Console.SetCursorPosition(1,1);
             Console.WriteLine($"-[{task.Id}] {task.Description}");
         }
 
         else Console.WriteLine($"|-{task.Description}");
         for (int i = 0; i < task.DependantOn.Count(); i++)
         {
-            ShowDependenciesOption(task.DependantOn[i], depth + 1);
+            DependencyGraph(task.DependantOn[i], depth + 1);
         }
     }
 
     public void AddTaskOption(Member member)
     {
         bool validPriority = false;
-        bool looped = false;
 
-        string description = Prompt ("Enter task description: ");
+        Format.TrueClear();
+        Format.WriteTitle("DESCRIPTION");
+        Format.CentreCursor();
+    
+        string description = Format.Prompt("Enter task description: ");
 
         while (!validPriority)
         {
-            Console.WriteLine("1. Low");
-            Console.WriteLine("2. Medium");
-            Console.WriteLine("3. High");
-            if (looped) Console.WriteLine("Invalid priority choice. Please enter 1 2 or 3.");
-            string priorityStr = Prompt ("Choose task priority: ");
-            string assignYourself = Prompt("Would you like to assign yourself? (y/n): ");
+            Format.TrueClear();
+            Format.WriteTitle("STATUS OPTIONS");
+            Format.WriteList([
+                "Low", "Medium", "High"
+            ], (Console.WindowHeight - 3) / 2);
+
+            Format.Pad(1);
+
+            string priorityStr = Format.PromptReadKey("Select task priority: ");
+            
             if (int.TryParse(priorityStr, out int priority))
             {
-                if (priority > 3 || priority < 1)
-                {
-                    looped = true;
-                }
                 if (priority < 4 && priority > 0)
                 {
+                    Format.TrueClear();
+                    Format.WriteTitle("AUTO ASSIGNMENT");
+                    Format.CentreCursor();
+                    
+                    string assignYourself = Format.PromptReadKey("Would you like to assign yourself? (y/n): ");
                     _taskService.AddTask(description, priority -2, assignYourself.ToLower().Contains('y') ? new List<int> {member.Id} : null);
                     validPriority = true;
                 }
@@ -123,7 +247,12 @@ public class Options
 
     public void RemoveTaskOption()
     {
-        string removeIdStr = Prompt ("Enter task id to remove: ");
+        Format.TrueClear();
+        DisplayTasksTruncated(_taskService.GetAllTasks());
+        Format.WriteTitle("REMOVE");
+        Format.CentreCursor();
+        
+        string removeIdStr = Format.Prompt("Enter task Id: ");
         if (int.TryParse(removeIdStr, out int removeId)) {
             _taskService.RemoveTask(removeId);
         }
@@ -131,11 +260,21 @@ public class Options
 
     public void ToggleTaskStatusOption()
     {
-        string toggleIdStr = Prompt ("ENTER TASK ID: ");
-        Console.WriteLine("[1] TO DO");
-        Console.WriteLine("[2] IN PROGRESS");
-        Console.WriteLine("[3] DONE");
-        string? statusOption = PromptReadKey("SELECT AN OPTION");
+        Format.TrueClear();
+        DisplayTasksTruncated(_taskService.GetAllTasks());
+        Format.WriteTitle("TOGGLE STATUS");
+        Format.CentreCursor();
+        
+        string toggleIdStr = Format.Prompt("Enter task Id: ");
+        
+        Format.TrueClear();
+        Format.WriteTitle("STATUS OPTIONS");
+        Format.WriteList([
+            "To Do", "In Progress", "Done"
+        ], (Console.WindowHeight - 3) / 2);
+        Format.Pad(1);
+
+        string? statusOption = Format.PromptReadKey("Select task status: ");
         if (int.TryParse(toggleIdStr, out int toggleId)) {
             _taskService.ToggleTaskStatus(toggleId, statusOption switch {
                 "1" => -1,
@@ -148,15 +287,29 @@ public class Options
 
     public void TaskAssignmentOption()
     {
-        string taskIdstr = Prompt("Please enter a task ID: ");
+        Format.TrueClear();
+        DisplayTasksTruncated(_taskService.GetAllTasks());
+        Format.WriteTitle("MEMBER ASSIGNMENT");
+        Format.CentreCursor();
+        
+        string taskIdstr = Format.Prompt("Enter task Id: ");
         if (int.TryParse(taskIdstr, out int taskId))
         {
             TaskItem? task = _taskService.GetTaskById(taskId);
-            if (task != null && int.TryParse(Prompt("How many members would you like to assign? "), out int memberAmount))
+
+            Format.TrueClear();
+            Format.WriteTitle("MEMBER ASSIGNMENT");
+            Format.CentreCursor();
+            
+            if (task != null && int.TryParse(Format.Prompt("How many members would you like to assign? "), out int memberAmount))
             {
                 for (int i = 0; i < memberAmount; i++)
                 {
-                    if (int.TryParse(Prompt("Input member id: "), out int memberIdOut))
+                    Format.TrueClear();
+                    Format.WriteTitle("MEMBER ASSIGNMENT");
+                    Format.CentreCursor();
+                    
+                    if (int.TryParse(Format.Prompt($"Enter member {i + 1} Id: "), out int memberIdOut))
                     {
                         if (_memberService.GetMemberById(memberIdOut) != null && !task.AssignedMembers.Contains(memberIdOut)) task.AssignedMembers.Add(memberIdOut);
                     }
@@ -168,12 +321,23 @@ public class Options
     
     public void TaskDependancyOption()
     {
-        string taskIdstr = Prompt("Task Id: ");
+        Format.TrueClear();
+        DisplayTasksTruncated(_taskService.GetAllTasks());
+        Format.WriteTitle("TASK DEPENDENCY");
+        Format.CentreCursor();
+        
+        string taskIdstr = Format.Prompt("Enter task Id: ");
+
         if (int.TryParse(taskIdstr, out int taskId))
         {
             TaskItem? task = _taskService.GetTaskById(taskId);
             if (task == null) return;
-            string dependencyIdstr = Prompt("Dependency Id: ");
+
+            Format.TrueClear();
+            Format.WriteTitle("TASK DEPENDENCY");
+            Format.CentreCursor();
+            
+            string dependencyIdstr = Format.Prompt("Enter dependency Id: ");
 
             if (int.TryParse(dependencyIdstr, out int dependencyId))
             {
@@ -184,19 +348,28 @@ public class Options
 
     public void FilterOption()
     {
-        Console.WriteLine("\nFilter Options:");
-        Console.WriteLine("1. Filter by Priority");
-        Console.WriteLine("2. Filter by Status");
-        Console.WriteLine("3. Filter by Date");
-        string filterOption = Prompt("Select filter: ");
+        Format.TrueClear();
+        Format.WriteTitle("FILTER OPTIONS");
+
+        Format.WriteList([
+            "Filter by Priority", "Filter by Status", "Filter by Date"
+        ], (Console.WindowHeight - 3) / 2);
+        Format.Pad(1);
+
+        string filterOption = Format.PromptReadKey("Select filter: ");
 
         switch (filterOption)
         {
             case "1":
-                Console.WriteLine("1. Low");
-                Console.WriteLine("2. Medium");
-                Console.WriteLine("3. High");
-                string priorityStr = Prompt("Select priority: ");
+                Format.TrueClear();
+                Format.WriteTitle("FILTER OPTIONS");
+
+                Format.WriteList([
+                    "Low", "Medium", "High"
+                ], (Console.WindowHeight - 3) / 2);
+                Format.Pad(1);
+
+                string priorityStr = Format.PromptReadKey("Select priority: ");
                 if (int.TryParse(priorityStr, out int priorityFilter))
                 {
                     int priorityValue = priorityFilter switch
@@ -209,16 +382,21 @@ public class Options
                     if (priorityValue != -99)
                     {
                         DisplayTasks(_taskService.GetTasksByPriority(priorityValue));
-                        Prompt("Press Enter to continue...");
+                        Format.Prompt("Press Enter to continue...");
                     }
                 }
                 break;
 
             case "2":
-                Console.WriteLine("1. To Do");
-                Console.WriteLine("2. In Progress");
-                Console.WriteLine("3. Done");
-                string statusStr = Prompt("Select status: ");
+                Format.TrueClear();
+                Format.WriteTitle("FILTER BY STATUS");
+
+                Format.WriteList([
+                    "To Do", "In Progress", "Done"
+                ], (Console.WindowHeight - 3) / 2);
+                Format.Pad(1);
+
+                string statusStr = Format.PromptReadKey("Select status: ");
                 if (int.TryParse(statusStr, out int statusFilter))
                 {
                     int statusValue = statusFilter switch
@@ -231,22 +409,26 @@ public class Options
                     if (statusValue != -99)
                     {
                         DisplayTasks(_taskService.GetTasksByStatus(statusValue));
-                        Prompt("Press Enter to continue...");
+                        Format.Prompt("Press Enter to continue...");
                     }
                 }
                 break;
 
             case "3":
-                string dateStr = Prompt("Enter date (yyyy-MM-dd): ");
+                Format.TrueClear();
+                Format.WriteTitle("FILTER BY DATE");
+                Format.CentreCursor();
+
+                string dateStr = Format.Prompt("Enter date (yyyy-MM-dd): ");
                 if (DateTime.TryParse(dateStr, out DateTime filterDate))
                 {
                     DisplayTasks(_taskService.GetTasksByDate(filterDate));
-                    Prompt("Press Enter to continue...");
+                    Format.Prompt("Press Enter to continue...");
                 }
                 else
                 {
                     Console.WriteLine("Invalid date format.");
-                    Prompt("Press Enter to continue...");
+                    Format.Prompt("Press Enter to continue...");
                 }
                 break;
 
@@ -257,19 +439,4 @@ public class Options
 
         
     }
-
-    string Prompt(string prompt)
-    {
-        Console.Write(prompt);
-        return Console.ReadLine();
-    }
-
-    string? PromptReadKey(string prompt)
-    {
-        var key = Console.ReadKey(intercept: true); // intercept prevents write to console
-        Console.WriteLine();
-
-        return key.KeyChar.ToString();
-    }
-
 }

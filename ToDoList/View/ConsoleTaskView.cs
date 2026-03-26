@@ -5,7 +5,7 @@ public class ConsoleTaskView : ITaskView
 {
     private readonly ITaskService _taskService;
     private readonly IMemberService _memberService;
-    private Options options;
+    private Options? options;
 
     public ConsoleTaskView(ITaskService taskService, IMemberService memberService)
     {
@@ -13,28 +13,24 @@ public class ConsoleTaskView : ITaskView
         _memberService = memberService;
     }
 
-    string Prompt(string prompt)
-    {
-        Console.Write(prompt);
-        return Console.ReadLine();
-    }
-
-    string? PromptReadKey(string prompt)
-    {
-        Console.WriteLine(prompt);
-        return Console.ReadKey().ToString();
-    }
-
-
     public void Run() {
+        // Format.SetConsoleColor(ConsoleColor.Black, ConsoleColor.White);
+        
         bool LoggedIn = false;
         Member? member = null;
         
         while(!LoggedIn && member == null)
         {
-            Console.WriteLine("Log in to continue:");
-            string name = Prompt("Name: ");
-            string password = Prompt("Password: ");
+            Format.TrueClear();
+            Format.CentreCursor();
+            Console.Write("LOG IN");
+            Format.Pad(2);
+
+            string name = Format.Prompt("Name: ");
+            string password = Format.Prompt("Password: ", mask: true);
+
+            Format.Pad();
+            if (name == null || password == null) continue;
 
             Tuple<bool, Member?> result = _memberService.LogIn(name, password);
             LoggedIn = result.Item1;
@@ -43,9 +39,9 @@ public class ConsoleTaskView : ITaskView
 
         while (LoggedIn && member != null) {
             options = new Options(member, _taskService, _memberService);
-
-            options.DisplayTasks(_taskService.GetAllTasks());
-            string? option =  options.DisplayOptions(member);
+            Format.Pad(3);
+            options.DisplayTasksTruncated(_taskService.GetAllTasks());
+            string? option =  options.DisplayOptions();
 
             switch (option) {
                 case "1":
@@ -73,16 +69,12 @@ public class ConsoleTaskView : ITaskView
                     break;
 
                 case "7":
-                    string taskIdstr = Prompt("Task Id: ");
-                    if (int.TryParse(taskIdstr, out int taskId))
-                    {
-                        options.ShowDependenciesOption(taskId);
-                    }
-                    Console.WriteLine("Press any key to continue...");
-                    Console.ReadKey();
+                    options.ShowDependenciesOption();
                     break;
 
                 case "8":
+                    Console.ResetColor();
+                    Format.TrueClear();
                     return;
 
                 default:
