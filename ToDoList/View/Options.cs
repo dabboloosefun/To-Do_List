@@ -20,7 +20,7 @@ public class Options
         Console.WriteLine("==== ToDo List ====");
         foreach (var task in tasks)
         {
-            if (task.Status == -1) Console.WriteLine($"To Do: [{task.Id}] [{task.Priority switch
+            if (task.Status == -1) Console.WriteLine($"To Do: {(_taskService.CanStartTask(task) ? "" : "LOCKED")} [{task.Id}] [{task.Priority switch
             {
                 -1 => "Low",
                 0 => "Medium",
