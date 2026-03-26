@@ -34,7 +34,7 @@ class TaskService : ITaskService {
 
     public void AddTask(string description, int priority, List<int>? assignedMembers) {
         int newId = _tasks.Count > 0 ? GetLastTaskId() + 1 : 1;
-        var newTask = new TaskItem(assignedMembers) { 
+        TaskItem newTask = new TaskItem(assignedMembers) { 
             Id = newId, 
             Description = description, 
             Status = -1, 
@@ -45,7 +45,7 @@ class TaskService : ITaskService {
     }
 
     public void RemoveTask(int id) {
-        var task = GetTaskById(id);
+        TaskItem? task = GetTaskById(id);
         if (task != null) {
             _tasks.Remove(task);
             SaveTasks();
@@ -92,6 +92,41 @@ class TaskService : ITaskService {
         IMyIterator<TaskItem> iterator = array.GetIterator();
         while (iterator.HasNext()) {
             yield return iterator.Next();
+    public bool DependanciesDone(TaskItem item)
+    {
+        int amountDone = 0;
+        foreach (int taskId in item.DependantOn)
+        {
+            TaskItem? dependancy = GetTaskById(taskId);
+            if (dependancy == null)
+            {
+                amountDone--;
+                continue;
+            }
+
+            if (dependancy.Status == 2)
+            {
+                amountDone++;
+                continue;
+            }
+
+            amountDone--;
         }
+        return amountDone >= item.DependantOn.Count ? true : false;
+    }
+
+    public bool ToggleTaskStatus(int id, int status) {
+        TaskItem? task = GetTaskById(id);
+
+        if (task != null && status < 2) {
+            if (DependanciesDone(task)) 
+            {
+                task.Status = status;
+                _repository.Save(_tasks);
+                return true;
+            }
+        }
+        
+        return false;
     }
 }
