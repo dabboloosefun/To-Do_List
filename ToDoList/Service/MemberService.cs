@@ -1,45 +1,91 @@
-public class MemberService : IMemberService {
+public class MemberService : IMemberService
+{
     private readonly IRepository<Member> _repository;
-    private readonly List<Member> _Members;
-    public MemberService(IRepository<Member> repository) {
+    private readonly IMyArray<Member> _Members;
+
+    public MemberService(IRepository<Member> repository)
+    {
         _repository = repository;
-        _Members = _repository.Load();
+        List<Member> loaded = _repository.Load();
+        _Members = new MyArray<Member>();
+
+        foreach (var member in loaded)
+        {
+            _Members.Add(member);
+        }
     }
-    public IEnumerable<Member> GetAllMembers() => _Members;
-    public void AddMember(string name, string password) {
-        int newId = _Members.Count > 0 ? _Members[_Members.Count - 1].Id + 1 :
-        1;
-        var newMember = new Member { Id = newId, Name =
-        name, Password = password};
+
+    public IEnumerable<Member> GetAllMembers()
+    {
+        return ConvertToEnumerable(_Members);
+    }
+
+    public void AddMember(string name, string password)
+    {
+        int newId = _Members.Count > 0 ? GetLastMemberId() + 1 : 1;
+        var newMember = new Member { Id = newId, Name = name, Password = password };
         _Members.Add(newMember);
-        _repository.Save(_Members);
+        SaveMembers();
     }
 
     public Member? GetMemberById(int id)
     {
-        foreach (Member m in _Members)
+        return _Members.FindBy(id, (member, key) => member.Id == key ? 0 : 1);
+    }
+
+    public void RemoveMember(int id)
+    {
+        var member = GetMemberById(id);
+        if (member != null)
         {
-            if (m.Id == id)
+            _Members.Remove(member);
+            SaveMembers();
+        }
+    }
+
+    public Tuple<bool, Member?> LogIn(string name, string password)
+    {
+        IMyIterator<Member> iterator = _Members.GetIterator();
+        while (iterator.HasNext())
+        {
+            var member = iterator.Next();
+            if (member.Name == name && member.Password == password)
             {
-                return m;
+                return new Tuple<bool, Member?>(true, member);
             }
-        }
-        return null;
-    }
-    public void RemoveMember(int id) {
-        var Member = _Members.Find(m => m.Id == id);
-        if (Member != null) {
-            _Members.Remove(Member);
-            _repository.Save(_Members);
-        }
-    }
-    public Tuple<bool, Member?> LogIn(string name, string password) {
-        Console.WriteLine(_Members);
-        var Member = _Members.Find(m => m.Name == name);
-        Console.WriteLine(Member);
-        if (Member != null && Member.Password == password) {
-            return new Tuple<bool, Member?>(true, Member);
         }
         return new Tuple<bool, Member?>(false, null);
     }
-} 
+
+    private int GetLastMemberId()
+    {
+        int lastId = 0;
+        IMyIterator<Member> iterator = _Members.GetIterator();
+        while (iterator.HasNext())
+        {
+            var m = iterator.Next();
+            if (m.Id > lastId) lastId = m.Id;
+        }
+        return lastId;
+    }
+
+    private void SaveMembers()
+    {
+        List<Member> list = new List<Member>();
+        IMyIterator<Member> iterator = _Members.GetIterator();
+        while (iterator.HasNext())
+        {
+            list.Add(iterator.Next());
+        }
+        _repository.Save(list);
+    }
+
+    private IEnumerable<Member> ConvertToEnumerable(IMyArray<Member> array)
+    {
+        IMyIterator<Member> iterator = array.GetIterator();
+        while (iterator.HasNext())
+        {
+            yield return iterator.Next();
+        }
+    }
+}

@@ -165,3 +165,14 @@ public class MyArray<T> : IMyArray<T>
         }
     }
 }
+public static class MyArrayExtensions
+{
+    public static IEnumerable<T> AsEnumerable<T>(this IMyArray<T> array)
+    {
+        IMyIterator<T> iterator = array.GetIterator();
+        while (iterator.HasNext())
+        {
+            yield return iterator.Next();
+        }
+    }
+}

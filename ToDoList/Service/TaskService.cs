@@ -1,62 +1,97 @@
 class TaskService : ITaskService {
     private readonly IRepository<TaskItem> _repository;
-    private readonly List<TaskItem> _tasks;
+    private readonly IMyArray<TaskItem> _tasks;
+
     public TaskService(IRepository<TaskItem> repository) {
         _repository = repository;
-        _tasks = _repository.Load();
-    }
-    public IEnumerable<TaskItem> GetAllTasks() => _tasks;
-    public TaskItem? GetTaskById(int id)
-    {
-        foreach (TaskItem task in _tasks)
-        {
-            if (task.Id == id)
-            {
-                return task;
-            }
-        }
+        List<TaskItem> loaded = _repository.Load();
+        _tasks = new MyArray<TaskItem>();
         
-        return null;
+        foreach (var task in loaded) {
+            _tasks.Add(task);
+        }
     }
 
-    public void UpdateTask(TaskItem task)
-    {
-        int taskIdx = -1;
+    public IEnumerable<TaskItem> GetAllTasks() {
+        return ConvertToEnumerable(_tasks);
+    }
 
-        for (int i = 0; i < _tasks.Count(); i++)
-        {
-            if (_tasks[i].Id == task.Id)
-            {
-                taskIdx = i;
-            }
-        }
-        if (taskIdx > -1)
-        {
-            _tasks[taskIdx] = task;
-            _repository.Save(_tasks);
-        }
+    public IEnumerable<TaskItem> GetTasksByPriority(int priority) {
+        return ConvertToEnumerable(_tasks.Filter(t => t.Priority == priority));
+    }
+
+    public IEnumerable<TaskItem> GetTasksByStatus(int status) {
+        return ConvertToEnumerable(_tasks.Filter(t => t.Status == status));
+    }
+
+    public IEnumerable<TaskItem> GetTasksByDate(DateTime date) {
+        return ConvertToEnumerable(_tasks.Filter(t => t.CreationDate.Date == date.Date));
+    }
+
+    public TaskItem? GetTaskById(int id) {
+        return _tasks.FindBy(id, (task, key) => task.Id == key ? 0 : 1);
     }
 
     public void AddTask(string description, int priority, List<int>? assignedMembers) {
-        int newId = _tasks.Count > 0 ? _tasks[_tasks.Count - 1].Id + 1 :
-        1;
-        var newTask = new TaskItem(assignedMembers) { Id = newId, Description =
-        description, Status = -1, Priority = priority};
+        int newId = _tasks.Count > 0 ? GetLastTaskId() + 1 : 1;
+        var newTask = new TaskItem(assignedMembers) { 
+            Id = newId, 
+            Description = description, 
+            Status = -1, 
+            Priority = priority
+        };
         _tasks.Add(newTask);
-        _repository.Save(_tasks);
+        SaveTasks();
     }
+
     public void RemoveTask(int id) {
-        var task = _tasks.Find(t => t.Id == id);
+        var task = GetTaskById(id);
         if (task != null) {
             _tasks.Remove(task);
-            _repository.Save(_tasks);
+            SaveTasks();
         }
     }
+
+    public void UpdateTask(TaskItem task) {
+        var existing = GetTaskById(task.Id);
+        if (existing != null) {
+            _tasks.Remove(existing);
+            _tasks.Add(task);
+            SaveTasks();
+        }
+    }
+
     public void ToggleTaskStatus(int id, int status) {
-        var task = _tasks.Find(t => t.Id == id);
+        var task = GetTaskById(id);
         if (task != null && status < 2) {
             task.Status = status;
-            _repository.Save(_tasks);
+            SaveTasks();
         }
     }
-} 
+
+    private int GetLastTaskId() {
+        int lastId = 0;
+        IMyIterator<TaskItem> iterator = _tasks.GetIterator();
+        while (iterator.HasNext()) {
+            var t = iterator.Next();
+            if (t.Id > lastId) lastId = t.Id;
+        }
+        return lastId;
+    }
+
+    private void SaveTasks() {
+        List<TaskItem> list = new List<TaskItem>();
+        IMyIterator<TaskItem> iterator = _tasks.GetIterator();
+        while (iterator.HasNext()) {
+            list.Add(iterator.Next());
+        }
+        _repository.Save(list);
+    }
+
+    private IEnumerable<TaskItem> ConvertToEnumerable(IMyArray<TaskItem> array) {
+        IMyIterator<TaskItem> iterator = array.GetIterator();
+        while (iterator.HasNext()) {
+            yield return iterator.Next();
+        }
+    }
+}
