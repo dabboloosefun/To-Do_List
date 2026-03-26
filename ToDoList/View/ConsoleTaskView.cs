@@ -126,7 +126,32 @@ public class ConsoleTaskView : ITaskView {
             });
         }
     }
+
+    public void TaskAssignmentOption()
+    {
+        string taskIdstr = Prompt("Please enter a task ID: ");
+        if (int.TryParse(taskIdstr, out int taskId))
+        {
+            TaskItem? task = _taskService.GetTaskById(taskId);
+            if (task != null && int.TryParse(Prompt("How many members would you like to assign? "), out int memberAmount))
+            {
+                for (int i = 0; i < memberAmount; i++)
+                {
+                    if (int.TryParse(Prompt("Input member id: "), out int memberIdOut))
+                    {
+                        if (_memberService.GetMemberById(memberIdOut) != null && !task.AssignedMembers.Contains(memberIdOut)) task.AssignedMembers.Add(memberIdOut);
+                    }
+                }
+                _taskService.UpdateTask(task);
+            }
+        }
+    }
     
+    public void TaskDependancyOption()
+    {
+        throw new NotImplementedException();    
+    }
+
     public void Run() {
         bool LoggedIn = false;
         Member? member = null;
@@ -151,32 +176,26 @@ public class ConsoleTaskView : ITaskView {
                 case "1":
                     AddTaskOption(member);
                     break;
+
                 case "2":
                     RemoveTaskOption();
                     break;
+
                 case "3":
                     ToggleTaskStatusOption();
                     break;
+
                 case "4":
-                    string taskIdstr = Prompt("Please enter a task ID: ");
-                    if (int.TryParse(taskIdstr, out int taskId))
-                    {
-                        TaskItem? task = _taskService.GetTaskById(taskId);
-                        if (task != null && int.TryParse(Prompt("How many members would you like to assign? "), out int memberAmount))
-                        {
-                            for (int i = 0; i < memberAmount; i++)
-                            {
-                                if (int.TryParse(Prompt("Input member id: "), out int memberIdOut))
-                                {
-                                    if (_memberService.GetMemberById(memberIdOut) != null && !task.AssignedMembers.Contains(memberIdOut)) task.AssignedMembers.Add(memberIdOut);
-                                }
-                            }
-                            _taskService.UpdateTask(task);
-                        }
-                    }
+                    TaskAssignmentOption();
                     break;
+
                 case "5":
+                    TaskDependancyOption();
+                    break;
+
+                case "6":
                     return;
+
                 default:
                     Console.WriteLine("Invalid option. Press any key to continue...");
                     Console.ReadKey();
