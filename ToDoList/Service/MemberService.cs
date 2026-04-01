@@ -1,7 +1,7 @@
 public class MemberService : IMemberService
 {
     private readonly IRepository<Member> _repository;
-    private readonly IMyArray<Member> _Members;
+    private readonly IMyCollection<Member> _Members;
 
     public MemberService(IRepository<Member> repository)
     {
@@ -30,7 +30,7 @@ public class MemberService : IMemberService
 
     public Member? GetMemberById(int id)
     {
-        return _Members.FindBy(id, (member, key) => member.Id == key ? 0 : 1);
+        return _Members.FindBy(id, (member, key) => member.Id == key);
     }
 
     public void RemoveMember(int id)
@@ -80,9 +80,9 @@ public class MemberService : IMemberService
         _repository.Save(list);
     }
 
-    private IEnumerable<Member> ConvertToEnumerable(IMyArray<Member> array)
+    private IEnumerable<Member> ConvertToEnumerable(IMyCollection<Member> collection)
     {
-        IMyIterator<Member> iterator = array.GetIterator();
+        IMyIterator<Member> iterator = collection.GetIterator();
         while (iterator.HasNext())
         {
             yield return iterator.Next();

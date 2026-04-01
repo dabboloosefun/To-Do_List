@@ -69,7 +69,7 @@ public class Options
         bool validPriority = false;
         bool looped = false;
 
-        string description = Prompt ("Enter task description: ");
+        string description = Prompt("Enter task description: ");
 
         while (!validPriority)
         {
@@ -77,7 +77,7 @@ public class Options
             Console.WriteLine("2. Medium");
             Console.WriteLine("3. High");
             if (looped) Console.WriteLine("Invalid priority choice. Please enter 1 2 or 3.");
-            string priorityStr = Prompt ("Choose task priority: ");
+            string priorityStr = Prompt("Choose task priority: ");
             string assignYourself = Prompt("Would you like to assign yourself? (y/n): ");
             if (int.TryParse(priorityStr, out int priority))
             {
@@ -87,30 +87,39 @@ public class Options
                 }
                 if (priority < 4 && priority > 0)
                 {
-                    _taskService.AddTask(description, priority -2, assignYourself.ToLower().Contains('y') ? new List<int> {member.Id} : null);
+                    IMyCollection<int>? assignedMembers = null;
+                    if (assignYourself.ToLower().Contains('y'))
+                    {
+                        assignedMembers = new MyArray<int>();
+                        assignedMembers.Add(member.Id);
+                    }
+                    _taskService.AddTask(description, priority - 2, assignedMembers);
                     validPriority = true;
                 }
             }
-        } 
+        }
     }
 
     public void RemoveTaskOption()
     {
-        string removeIdStr = Prompt ("Enter task id to remove: ");
-        if (int.TryParse(removeIdStr, out int removeId)) {
+        string removeIdStr = Prompt("Enter task id to remove: ");
+        if (int.TryParse(removeIdStr, out int removeId))
+        {
             _taskService.RemoveTask(removeId);
         }
     }
 
     public void ToggleTaskStatusOption()
     {
-        string toggleIdStr = Prompt ("ENTER TASK ID: ");
+        string toggleIdStr = Prompt("ENTER TASK ID: ");
         Console.WriteLine("[1] TO DO");
         Console.WriteLine("[2] IN PROGRESS");
         Console.WriteLine("[3] DONE");
         string? statusOption = PromptReadKey("SELECT AN OPTION");
-        if (int.TryParse(toggleIdStr, out int toggleId)) {
-            _taskService.ToggleTaskStatus(toggleId, statusOption switch {
+        if (int.TryParse(toggleIdStr, out int toggleId))
+        {
+            _taskService.ToggleTaskStatus(toggleId, statusOption switch
+            {
                 "1" => -1,
                 "2" => 0,
                 "3" => 1,
@@ -131,17 +140,27 @@ public class Options
                 {
                     if (int.TryParse(Prompt("Input member id: "), out int memberIdOut))
                     {
-                        if (_memberService.GetMemberById(memberIdOut) != null && !task.AssignedMembers.Contains(memberIdOut)) task.AssignedMembers.Add(memberIdOut);
+                        bool alreadyAssigned = false;
+                        IMyIterator<int> iterator = task.AssignedMembers.GetIterator();
+                        while (iterator.HasNext())
+                        {
+                            if (iterator.Next() == memberIdOut)
+                            {
+                                alreadyAssigned = true;
+                            }
+                        }
+
+                        if (_memberService.GetMemberById(memberIdOut) != null && !alreadyAssigned) task.AssignedMembers.Add(memberIdOut);
                     }
                 }
                 _taskService.UpdateTask(task);
             }
         }
     }
-    
+
     public void TaskDependancyOption()
     {
-        throw new NotImplementedException();    
+        throw new NotImplementedException();
     }
 
     public void FilterOption()
@@ -217,18 +236,18 @@ public class Options
                 break;
         }
 
-        
+
     }
 
     string Prompt(string prompt)
     {
         Console.Write(prompt);
-        return Console.ReadLine();
+        return Console.ReadLine() ?? "";
     }
 
     string? PromptReadKey(string prompt)
     {
-        var key = Console.ReadKey(intercept: true); // intercept prevents write to console
+        var key = Console.ReadKey(intercept: true);
         Console.WriteLine();
 
         return key.KeyChar.ToString();
