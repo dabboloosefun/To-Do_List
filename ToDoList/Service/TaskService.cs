@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 class TaskService : ITaskService
 {
     private readonly IRepository<TaskItem> _repository;
@@ -107,7 +110,51 @@ class TaskService : ITaskService
         }
     }
 
-    public bool DependanciesDone(TaskItem item)
+    public void RemoveDependency(TaskItem task, int dependencyId)
+    {
+        if (GetTaskById(dependencyId) == null) return;
+        if (task.DependantOn.Contains(dependencyId)) task.DependantOn.Remove(dependencyId);
+        SaveTasks();
+    }
+
+    public void AddDependency(TaskItem task, int dependencyId)
+    {
+        TaskItem? dependency = GetTaskById(dependencyId);
+        if (dependency == null || IsCircular(task.Id, dependency)) return;
+
+        task.DependantOn.Add(dependencyId);
+        SaveTasks();
+    }
+
+    public bool IsCircular(int taskId, TaskItem dependency, HashSet<int>? visited = null)
+    {
+        bool isCircular = false;
+        visited ??= new HashSet<int>{};
+
+        if (!visited.Add(dependency.Id)) return false;
+
+        if (dependency.DependantOn.Contains(taskId))
+        {
+            isCircular = true;
+            return isCircular;
+        }
+
+        for (int i = 0; i < dependency.DependantOn.Count(); i++)
+        {
+            TaskItem? next = GetTaskById(dependency.DependantOn[i]);
+            if (next == null) continue;
+            bool result = IsCircular(taskId, next, visited);
+            if (result == true)
+            {
+                isCircular = true;
+                break;
+            }
+        }
+
+        return isCircular;
+    }
+
+    public bool CanStartTask(TaskItem item)
     {
         int amountDone = 0;
         IMyIterator<int> iterator = item.DependantOn.GetIterator();
@@ -140,12 +187,17 @@ class TaskService : ITaskService
 
         if (task != null && status < 2)
         {
-            if (DependanciesDone(task))
+            if (CanStartTask(task))
             {
                 task.Status = status;
                 SaveTasks();
                 return true;
             }
+        }
+        else if (task != null)
+        {
+            task.Status = -1;
+            SaveTasks();
         }
 
         return false;

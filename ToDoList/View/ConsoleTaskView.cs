@@ -5,6 +5,7 @@ public class ConsoleTaskView : ITaskView
 {
     private readonly ITaskService _taskService;
     private readonly IMemberService _memberService;
+    private Options? options;
 
     public ConsoleTaskView(ITaskService taskService, IMemberService memberService)
     {
@@ -12,165 +13,71 @@ public class ConsoleTaskView : ITaskView
         _memberService = memberService;
     }
 
-    void DisplayTasks(IEnumerable<TaskItem> tasks)
-    {
-        Console.Clear();
-        Console.WriteLine("==== ToDo List ====");
-        foreach (var task in tasks)
-        {
-            if (task.Status == -1) Console.WriteLine($"To Do: [{task.Id}] [{task.Priority switch
-            {
-                -1 => "Low",
-                0 => "Medium",
-                1 => "High",
-                _ => "None"
-            }}] {task.Description}");
-        }
-        Console.WriteLine("==== In Progress List ====");
-        foreach (var task in tasks)
-        {
-            if (task.Status == 0) Console.WriteLine($"In Progress: [{task.Id}] [{task.Priority switch
-            {
-                -1 => "Low",
-                0 => "Medium",
-                1 => "High",
-                _ => "None"
-            }}] {task.Description}");
-        }
-        Console.WriteLine("==== Done List ====");
-        foreach (var task in tasks)
-        {
-            if (task.Status == 1) Console.WriteLine($"Done: [{task.Id}] [{task.Priority switch
-            {
-                -1 => "Low",
-                0 => "Medium",
-                1 => "High",
-                _ => "None"
-            }}] {task.Description}");
-        }
-    }
-
-    string Prompt(string prompt)
-    {
-        Console.Write(prompt);
-        return Console.ReadLine() ?? "";
-    }
-
     public void Run()
     {
         bool LoggedIn = false;
         Member? member = null;
+
         while (!LoggedIn && member == null)
         {
-            Console.WriteLine("Please log in to continue:");
-            string name = Prompt("Please input you name: ");
-            string password = Prompt("Please input your password: ");
+            Format.TrueClear();
+            Format.CentreCursor();
+            Console.Write("LOG IN");
+            Format.Pad(2);
+
+            string name = Format.Prompt("Name: ");
+            string password = Format.Prompt("Password: ", mask: true);
+
+            Format.Pad();
+            if (name == null || password == null) continue;
 
             Tuple<bool, Member?> result = _memberService.LogIn(name, password);
             LoggedIn = result.Item1;
             member = result.Item2;
         }
+
         while (LoggedIn && member != null)
         {
-            DisplayTasks(_taskService.GetAllTasks());
-            Console.WriteLine($"Currently logged in as {member.Name} [{member.Id}]");
-            Console.WriteLine("\nOptions:");
-            Console.WriteLine("1. Add Task");
-            Console.WriteLine("2. Remove Task");
-            Console.WriteLine("3. Toggle Task State");
-            Console.WriteLine("4. Manage Task Assignment");
-            Console.WriteLine("5. Exit");
-            string option = Prompt("Select an option: ");
+            options = new Options(member, _taskService, _memberService);
+            Format.Pad(3);
+            options.DisplayTasksTruncated(_taskService.GetAllTasks());
+            string? option = options.DisplayOptions();
+
             switch (option)
             {
                 case "1":
-                    bool validPriority = false;
-                    bool looped = false;
-
-                    string description = Prompt("Enter task description: ");
-
-                    while (!validPriority)
-                    {
-                        Console.WriteLine("1. Low");
-                        Console.WriteLine("2. Medium");
-                        Console.WriteLine("3. High");
-                        if (looped) Console.WriteLine("Invalid priority choice. Please enter 1 2 or 3.");
-                        string priorityStr = Prompt("Choose task priority: ");
-                        string assignYourself = Prompt("Would you like to assign yourself? (y/n): ");
-                        if (int.TryParse(priorityStr, out int priority))
-                        {
-                            if (priority > 3 || priority < 1)
-                            {
-                                looped = true;
-                            }
-                            if (priority < 4 && priority > 0)
-                            {
-                                IMyCollection<int>? assignedMembers = null;
-                                if (assignYourself.ToLower().Contains('y'))
-                                {
-                                    assignedMembers = new MyArray<int>();
-                                    assignedMembers.Add(member.Id);
-                                }
-                                _taskService.AddTask(description, priority - 2, assignedMembers);
-                                validPriority = true;
-                            }
-                        }
-                    }
+                    options.AddTaskOption(member);
                     break;
+
                 case "2":
-                    string removeIdStr = Prompt("Enter task id to remove: ");
-                    if (int.TryParse(removeIdStr, out int removeId))
-                    {
-                        _taskService.RemoveTask(removeId);
-                    }
+                    options.RemoveTaskOption();
                     break;
-                case "3":
-                    string toggleIdStr = Prompt("Enter task id to toggle: ");
-                    Console.WriteLine("1. To Do");
-                    Console.WriteLine("2. In Progress");
-                    Console.WriteLine("3. Done");
-                    string statusOption = Prompt("Select an option: ");
-                    if (int.TryParse(toggleIdStr, out int toggleId))
-                    {
-                        _taskService.ToggleTaskStatus(toggleId, statusOption switch
-                        {
-                            "1" => -1,
-                            "2" => 0,
-                            "3" => 1,
-                            _ => 2
-                        });
-                    }
-                    break;
-                case "4":
-                    string taskIdstr = Prompt("Please enter a task ID: ");
-                    if (int.TryParse(taskIdstr, out int taskId))
-                    {
-                        TaskItem? task = _taskService.GetTaskById(taskId);
-                        if (task != null && int.TryParse(Prompt("How many members would you like to assign? "), out int memberAmount))
-                        {
-                            for (int i = 0; i < memberAmount; i++)
-                            {
-                                if (int.TryParse(Prompt("Input member id: "), out int memberIdOut))
-                                {
-                                    bool alreadyAssigned = false;
-                                    IMyIterator<int> iterator = task.AssignedMembers.GetIterator();
-                                    while (iterator.HasNext())
-                                    {
-                                        if (iterator.Next() == memberIdOut)
-                                        {
-                                            alreadyAssigned = true;
-                                        }
-                                    }
 
-                                    if (_memberService.GetMemberById(memberIdOut) != null && !alreadyAssigned) task.AssignedMembers.Add(memberIdOut);
-                                }
-                            }
-                            _taskService.UpdateTask(task);
-                        }
-                    }
+                case "3":
+                    options.ToggleTaskStatusOption();
                     break;
+
+                case "4":
+                    options.TaskAssignmentOption();
+                    break;
+
                 case "5":
+                    options.TaskDependancyOption();
+                    break;
+
+                case "6":
+                    options.FilterOption();
+                    break;
+
+                case "7":
+                    options.ShowDependenciesOption();
+                    break;
+
+                case "8":
+                    Console.ResetColor();
+                    Format.TrueClear();
                     return;
+
                 default:
                     Console.WriteLine("Invalid option. Press any key to continue...");
                     Console.ReadKey();
