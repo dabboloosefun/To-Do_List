@@ -43,7 +43,7 @@ class TaskService : ITaskService
         return _tasks.FindBy(id, (task, key) => task.Id == key);
     }
 
-    public void AddTask(string description, int priority, IMyIndexable<int>? assignedMembers)
+    public void AddTask(string description, int priority, IMyCollection<int>? assignedMembers)
     {
         int newId = _tasks.Count > 0 ? GetLastTaskId() + 1 : 1;
         TaskItem newTask = new TaskItem(assignedMembers)
@@ -139,9 +139,11 @@ class TaskService : ITaskService
             return isCircular;
         }
 
+        IMyIterator<int> myIterator = dependency.DependantOn.GetIterator();
+
         for (int i = 0; i < dependency.DependantOn.Count; i++)
         {
-            TaskItem? next = GetTaskById(dependency.DependantOn[i]);
+            TaskItem? next = GetTaskById(myIterator.Next());
             if (next == null) continue;
             bool result = IsCircular(taskId, next, visited);
             if (result == true)

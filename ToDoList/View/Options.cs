@@ -199,9 +199,10 @@ public class Options
         }
         else Console.WriteLine($"|-{task.Description}");
 
+        IMyIterator<int> myIterator = task.DependantOn.GetIterator();
         for (int i = 0; i < task.DependantOn.Count; i++)
         {
-            DependencyGraph(task.DependantOn[i], depth + 1);
+            DependencyGraph(myIterator.Next(), depth + 1);
         }
     }
 
@@ -243,9 +244,9 @@ public class Options
         }
     }
 
-    private IMyIndexable<int> CreateSelfAssignment(int memberId)
+    private IMyCollection<int> CreateSelfAssignment(int memberId)
     {
-        IMyIndexable<int> assignedMembers = new MyArray<int>();
+        IMyCollection<int> assignedMembers = new MyArray<int>();
         assignedMembers.Add(memberId);
         return assignedMembers;
     }
