@@ -13,13 +13,12 @@ public class ConsoleTaskView : ITaskView
         _memberService = memberService;
     }
 
-    public void Run() {
-        // Format.SetConsoleColor(ConsoleColor.Black, ConsoleColor.White);
-        
+    public void Run()
+    {
         bool LoggedIn = false;
         Member? member = null;
-        
-        while(!LoggedIn && member == null)
+
+        while (!LoggedIn && member == null)
         {
             Format.TrueClear();
             Format.CentreCursor();
@@ -37,13 +36,15 @@ public class ConsoleTaskView : ITaskView
             member = result.Item2;
         }
 
-        while (LoggedIn && member != null) {
+        while (LoggedIn && member != null)
+        {
             options = new Options(member, _taskService, _memberService);
             Format.Pad(3);
             options.DisplayTasksTruncated(_taskService.GetAllTasks());
-            string? option =  options.DisplayOptions();
+            string? option = options.DisplayOptions();
 
-            switch (option) {
+            switch (option)
+            {
                 case "1":
                     options.AddTaskOption(member);
                     break;

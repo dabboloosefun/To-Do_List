@@ -1,4 +1,4 @@
-public class MyArray<T> : IMyArray<T>
+public class MyArray<T> : IMyCollection<T>
 {
     private T[] _items = new T[0];
     private int _count = 0;
@@ -63,7 +63,7 @@ public class MyArray<T> : IMyArray<T>
         int index = -1;
         for (int i = 0; i < _count; i++)
         {
-            if (_items[i].Equals(item))
+            if (_items[i] != null && _items[i]!.Equals(item))
             {
                 index = i;
                 break;
@@ -81,23 +81,23 @@ public class MyArray<T> : IMyArray<T>
         }
 
         _count--;
-        _items[_count] = default;
+        _items[_count] = default!;
         Dirty = true;
     }
 
-    public T FindBy<K>(K key, Func<T, K, int> comparer)
+    public T FindBy<K>(K key, Func<T, K, bool> comparer)
     {
         for (int i = 0; i < _count; i++)
         {
-            if (comparer(_items[i], key) == 0)
+            if (comparer(_items[i], key))
             {
                 return _items[i];
             }
         }
-        return default;
+        return default!;
     }
 
-    public IMyArray<T> Filter(Func<T, bool> predicate)
+    public IMyCollection<T> Filter(Func<T, bool> predicate)
     {
         MyArray<T> result = new MyArray<T>();
         IMyIterator<T> iterator = GetIterator();
@@ -134,7 +134,7 @@ public class MyArray<T> : IMyArray<T>
 
     public R Reduce<R>(Func<R, T, R> accumulator)
     {
-        R result = default;
+        R result = default!;
         for (int i = 0; i < _count; i++)
         {
             result = accumulator(result, _items[i]);
@@ -161,18 +161,7 @@ public class MyArray<T> : IMyArray<T>
     {
         for (int i = 0; i < _count; i++)
         {
-            yield return _items[i];
-        }
-    }
-}
-public static class MyArrayExtensions
-{
-    public static IEnumerable<T> AsEnumerable<T>(this IMyArray<T> array)
-    {
-        IMyIterator<T> iterator = array.GetIterator();
-        while (iterator.HasNext())
-        {
-            yield return iterator.Next();
+            yield return _items[i]!;
         }
     }
 }

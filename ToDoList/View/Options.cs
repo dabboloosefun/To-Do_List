@@ -18,7 +18,7 @@ public class Options
     public void DisplayTasksTruncated(IEnumerable<TaskItem> tasks)
     {
         int headerLength = $"Currently logged in as {_member.Name} [{_member.Id}]".Length + 2;
-        
+
         int left = ((Console.WindowWidth - headerLength) / 2) + headerLength;
         int top = 1;
         int maxWidth = Console.WindowWidth - left - 1;
@@ -29,8 +29,7 @@ public class Options
         Console.WriteLine("To Do".PadLeft("To Do".Length + (maxWidth - "To Do".Length) / 2, '=').PadRight(maxWidth, '='));
         foreach (var task in tasks)
         {
-            
-            if (task.Status == -1) 
+            if (task.Status == -1)
             {
                 top++;
                 Console.SetCursorPosition(left, top);
@@ -98,8 +97,7 @@ public class Options
         Console.WriteLine("To Do".PadLeft("To Do".Length + (maxWidth - "To Do".Length) / 2, '=').PadRight(maxWidth, '='));
         foreach (var task in tasks)
         {
-            
-            if (task.Status == -1) 
+            if (task.Status == -1)
             {
                 top++;
                 Console.SetCursorPosition(left, top);
@@ -161,7 +159,7 @@ public class Options
 
         Format.WriteList([
             "Add Task", "Remove Task", "Toggle Task Status", "Manage Task Assignment", "Manage Task Dependency", "Filter", "Show Dependencies", "Exit"
-            ], (Console.WindowHeight - 8) / 2);
+        ], (Console.WindowHeight - 8) / 2);
 
         return Format.PromptReadKey("Select an option: ");
     }
@@ -193,14 +191,14 @@ public class Options
             Console.Write("\t");
         }
 
-        if(depth == 0)
+        if (depth == 0)
         {
             Format.TrueClear();
-            Console.SetCursorPosition(1,1);
+            Console.SetCursorPosition(1, 1);
             Console.WriteLine($"-[{task.Id}] {task.Description}");
         }
-
         else Console.WriteLine($"|-{task.Description}");
+
         for (int i = 0; i < task.DependantOn.Count(); i++)
         {
             DependencyGraph(task.DependantOn[i], depth + 1);
@@ -214,7 +212,7 @@ public class Options
         Format.TrueClear();
         Format.WriteTitle("DESCRIPTION");
         Format.CentreCursor();
-    
+
         string description = Format.Prompt("Enter task description: ");
 
         while (!validPriority)
@@ -228,7 +226,7 @@ public class Options
             Format.Pad(1);
 
             string priorityStr = Format.PromptReadKey("Select task priority: ");
-            
+
             if (int.TryParse(priorityStr, out int priority))
             {
                 if (priority < 4 && priority > 0)
@@ -236,13 +234,20 @@ public class Options
                     Format.TrueClear();
                     Format.WriteTitle("AUTO ASSIGNMENT");
                     Format.CentreCursor();
-                    
+
                     string assignYourself = Format.PromptReadKey("Would you like to assign yourself? (y/n): ");
-                    _taskService.AddTask(description, priority -2, assignYourself.ToLower().Contains('y') ? new List<int> {member.Id} : null);
+                    _taskService.AddTask(description, priority - 2, assignYourself.ToLower().Contains('y') ? CreateSelfAssignment(member.Id) : null);
                     validPriority = true;
                 }
             }
-        } 
+        }
+    }
+
+    private IMyCollection<int> CreateSelfAssignment(int memberId)
+    {
+        IMyCollection<int> assignedMembers = new MyArray<int>();
+        assignedMembers.Add(memberId);
+        return assignedMembers;
     }
 
     public void RemoveTaskOption()
@@ -251,9 +256,10 @@ public class Options
         DisplayTasksTruncated(_taskService.GetAllTasks());
         Format.WriteTitle("REMOVE");
         Format.CentreCursor();
-        
+
         string removeIdStr = Format.Prompt("Enter task Id: ");
-        if (int.TryParse(removeIdStr, out int removeId)) {
+        if (int.TryParse(removeIdStr, out int removeId))
+        {
             _taskService.RemoveTask(removeId);
         }
     }
@@ -264,9 +270,9 @@ public class Options
         DisplayTasksTruncated(_taskService.GetAllTasks());
         Format.WriteTitle("TOGGLE STATUS");
         Format.CentreCursor();
-        
+
         string toggleIdStr = Format.Prompt("Enter task Id: ");
-        
+
         Format.TrueClear();
         Format.WriteTitle("STATUS OPTIONS");
         Format.WriteList([
@@ -275,8 +281,10 @@ public class Options
         Format.Pad(1);
 
         string? statusOption = Format.PromptReadKey("Select task status: ");
-        if (int.TryParse(toggleIdStr, out int toggleId)) {
-            _taskService.ToggleTaskStatus(toggleId, statusOption switch {
+        if (int.TryParse(toggleIdStr, out int toggleId))
+        {
+            _taskService.ToggleTaskStatus(toggleId, statusOption switch
+            {
                 "1" => -1,
                 "2" => 0,
                 "3" => 1,
@@ -291,7 +299,7 @@ public class Options
         DisplayTasksTruncated(_taskService.GetAllTasks());
         Format.WriteTitle("MEMBER ASSIGNMENT");
         Format.CentreCursor();
-        
+
         string taskIdstr = Format.Prompt("Enter task Id: ");
         if (int.TryParse(taskIdstr, out int taskId))
         {
@@ -300,7 +308,7 @@ public class Options
             Format.TrueClear();
             Format.WriteTitle("MEMBER ASSIGNMENT");
             Format.CentreCursor();
-            
+
             if (task != null && int.TryParse(Format.Prompt("How many members would you like to assign? "), out int memberAmount))
             {
                 for (int i = 0; i < memberAmount; i++)
@@ -308,24 +316,35 @@ public class Options
                     Format.TrueClear();
                     Format.WriteTitle("MEMBER ASSIGNMENT");
                     Format.CentreCursor();
-                    
+
                     if (int.TryParse(Format.Prompt($"Enter member {i + 1} Id: "), out int memberIdOut))
                     {
-                        if (_memberService.GetMemberById(memberIdOut) != null && !task.AssignedMembers.Contains(memberIdOut)) task.AssignedMembers.Add(memberIdOut);
+                        bool alreadyAssigned = false;
+                        IMyIterator<int> iterator = task.AssignedMembers.GetIterator();
+                        while (iterator.HasNext())
+                        {
+                            if (iterator.Next() == memberIdOut)
+                            {
+                                alreadyAssigned = true;
+                            }
+                        }
+
+                        if (_memberService.GetMemberById(memberIdOut) != null && !alreadyAssigned)
+                            task.AssignedMembers.Add(memberIdOut);
                     }
                 }
                 _taskService.UpdateTask(task);
             }
         }
     }
-    
+
     public void TaskDependancyOption()
     {
         Format.TrueClear();
         DisplayTasksTruncated(_taskService.GetAllTasks());
         Format.WriteTitle("TASK DEPENDENCY");
         Format.CentreCursor();
-        
+
         string taskIdstr = Format.Prompt("Enter task Id: ");
 
         if (int.TryParse(taskIdstr, out int taskId))
@@ -336,7 +355,7 @@ public class Options
             Format.TrueClear();
             Format.WriteTitle("TASK DEPENDENCY");
             Format.CentreCursor();
-            
+
             string dependencyIdstr = Format.Prompt("Enter dependency Id: ");
 
             if (int.TryParse(dependencyIdstr, out int dependencyId))
@@ -436,7 +455,5 @@ public class Options
                 Console.WriteLine("Invalid filter option.");
                 break;
         }
-
-        
     }
 }
