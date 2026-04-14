@@ -1,8 +1,29 @@
-public class MyArray<T> : IMyCollection<T>
+public class MyArray<T> : IMyIndexable<T>
 {
     private T[] _items = new T[0];
     private int _count = 0;
 
+    public T this[int index]
+    {
+        get
+        {
+            if (index < 0 || index >= _count)
+            {
+                throw new IndexOutOfRangeException();
+            }
+            return _items[index];
+        }
+
+        set
+        {
+            if (index < 0 || index >= _count)
+            {
+                throw new IndexOutOfRangeException();
+            }
+            _items[index] = value;
+            Dirty = true;
+        }
+    }
     public int Count
     {
         get { return _count; }

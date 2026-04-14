@@ -43,7 +43,7 @@ class TaskService : ITaskService
         return _tasks.FindBy(id, (task, key) => task.Id == key);
     }
 
-    public void AddTask(string description, int priority, IMyCollection<int>? assignedMembers)
+    public void AddTask(string description, int priority, IMyIndexable<int>? assignedMembers)
     {
         int newId = _tasks.Count > 0 ? GetLastTaskId() + 1 : 1;
         TaskItem newTask = new TaskItem(assignedMembers)
@@ -113,7 +113,7 @@ class TaskService : ITaskService
     public void RemoveDependency(TaskItem task, int dependencyId)
     {
         if (GetTaskById(dependencyId) == null) return;
-        if (task.DependantOn.Contains(dependencyId)) task.DependantOn.Remove(dependencyId);
+        if (task.DependantOn.FindBy<int>(dependencyId, (t, id) => t == id) != 0) task.DependantOn.Remove(dependencyId);
         SaveTasks();
     }
 
@@ -133,13 +133,13 @@ class TaskService : ITaskService
 
         if (!visited.Add(dependency.Id)) return false;
 
-        if (dependency.DependantOn.Contains(taskId))
+        if (dependency.DependantOn.FindBy<int>(taskId, (id, taskId) => id == taskId) != 0)
         {
             isCircular = true;
             return isCircular;
         }
 
-        for (int i = 0; i < dependency.DependantOn.Count(); i++)
+        for (int i = 0; i < dependency.DependantOn.Count; i++)
         {
             TaskItem? next = GetTaskById(dependency.DependantOn[i]);
             if (next == null) continue;

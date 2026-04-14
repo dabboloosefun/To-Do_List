@@ -17,4 +17,4 @@ class JsonRepository<T> : IRepository<T> {
         JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(_filePath, json);
     }
-} 
+}
