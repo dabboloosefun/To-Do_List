@@ -85,7 +85,7 @@ public class MyArray<T> : IMyCollection<T>
         Dirty = true;
     }
 
-    public T FindBy<K>(K key, Func<T, K, bool> comparer)
+    public T? FindBy<K>(K key, Func<T, K, bool> comparer)
     {
         for (int i = 0; i < _count; i++)
         {
@@ -94,7 +94,7 @@ public class MyArray<T> : IMyCollection<T>
                 return _items[i];
             }
         }
-        return default!;
+        return default;
     }
 
     public IMyCollection<T> Filter(Func<T, bool> predicate)
