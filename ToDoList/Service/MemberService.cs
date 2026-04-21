@@ -2,16 +2,20 @@ public class MemberService : IMemberService
 {
     private readonly IRepository<Member> _repository;
     private readonly IMyCollection<Member> _Members;
+    private readonly IMyHashMap<int, Member> _memberIndex;
 
     public MemberService(IRepository<Member> repository)
     {
         _repository = repository;
-        IEnumerable<Member> loaded = _repository.Load();
         _Members = new MyArray<Member>();
+        _memberIndex = new MyHashMap<int, Member>();
+
+        IEnumerable<Member> loaded = _repository.Load();
 
         foreach (var member in loaded)
         {
             _Members.Add(member);
+            _memberIndex.Add(member.Id, member);
         }
     }
 
@@ -24,13 +28,15 @@ public class MemberService : IMemberService
     {
         int newId = _Members.Count > 0 ? GetLastMemberId() + 1 : 1;
         var newMember = new Member { Id = newId, Name = name, Password = password };
+
         _Members.Add(newMember);
+        _memberIndex.Add(newMember.Id, newMember);
         SaveMembers();
     }
 
     public Member? GetMemberById(int id)
     {
-        return _Members.FindBy(id, (member, key) => member.Id == key);
+        return _memberIndex.FindBy(id);
     }
 
     public void RemoveMember(int id)
@@ -39,6 +45,7 @@ public class MemberService : IMemberService
         if (member != null)
         {
             _Members.Remove(member);
+            _memberIndex.Remove(id);
             SaveMembers();
         }
     }
