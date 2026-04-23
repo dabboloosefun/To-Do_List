@@ -132,6 +132,7 @@ public class MyBinarySearchTree<T> : IMyCollection<T>
     {
         if (_root == null) return default;
         return FindByRecursive<K>(key, comparer, _root);
+    }
 
     private T? FindByRecursive<K>(K key, Func<T, K, bool> comparer, Node? current)
     {
