@@ -26,7 +26,7 @@ public class MyBinarySearchTree<T> : IMyCollection<T>
     }
     
     private Node? _root;
-    private readonly Comparer _comparer;
+    private Comparer _comparer;
     private int _count = 0;
     private bool _dirty = false;
 
@@ -51,6 +51,12 @@ public class MyBinarySearchTree<T> : IMyCollection<T>
     {
         _root = head == null ? null : new Node(head);
         _comparer = new Comparer(comparison);
+    }
+
+    private MyBinarySearchTree(Comparer comparer)
+    {
+        _root = null;
+        _comparer = comparer;
     }
 
     public void Add(T data)
@@ -144,12 +150,62 @@ public class MyBinarySearchTree<T> : IMyCollection<T>
         return result;
     }
 
-    public IMyCollection<T> Filter(Func<T, bool> predicate);
-    public void Sort(Comparison<T> comparison);
-    public int Count { get; }
-    public bool Dirty { get; set; }
-    public R Reduce<R>(Func<R, T, R> accumulator);
-    public R Reduce<R>(R initial, Func<R, T, R> accumulator);
-    public IMyIterator<T> GetIterator();
-    public IEnumerator<T> GetEnumerator();
+    public IMyCollection<T> Filter(Func<T, bool> predicate)
+    {
+        return FilterRecursive(predicate, new MyBinarySearchTree<T>(_comparer), _root);
+    }
+
+    private IMyCollection<T> FilterRecursive(Func<T, bool> predicate, IMyCollection<T> filtered, Node? node)
+    {
+        if (node == null) return filtered;
+
+        if (predicate(node.data))
+        {
+            filtered.Add(node.data);
+        }
+
+        FilterRecursive(predicate, filtered, node.left);
+        FilterRecursive(predicate, filtered, node.right);
+
+        return filtered;
+    }
+
+    public void Sort(Comparison<T> comparison)
+    {
+        MyBinarySearchTree<T> sorted = new MyBinarySearchTree<T>(default, new Func<T, T, int>(comparison));
+        SortRecursive(sorted, _root);
+
+        _root = sorted._root;
+        _comparer = sorted._comparer;
+    }
+
+    private void SortRecursive(MyBinarySearchTree<T> sorted, Node? node)
+    {
+        if (node == null) return;
+
+        sorted.Add(node.data);
+
+        SortRecursive(sorted, node.left);
+        SortRecursive(sorted, node.right);
+    }
+
+    public R Reduce<R>(Func<R, T, R> accumulator)
+    {
+        throw new NotImplementedException();
+    }
+
+    public R Reduce<R>(R initial, Func<R, T, R> accumulator)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IMyIterator<T> GetIterator()
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        throw new NotImplementedException();
+    }
 }
