@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+
 public class MyBinarySearchTree<T> : IMyCollection<T>
 {
     private class Comparer
@@ -22,6 +24,41 @@ public class MyBinarySearchTree<T> : IMyCollection<T>
         public Node(T Data)
         {
             data = Data;
+        }
+    }
+
+    private class BinarySearchTreeIterator : IMyIterator<T>
+    {
+        private MyArray<T> sorted;
+        private IMyIterator<T> iterator;
+        public BinarySearchTreeIterator(Node? root)
+        {
+            sorted = new MyArray<T>();
+            ToArrayInOrder(root, sorted);
+            iterator = sorted.GetIterator();
+        }
+
+        private void ToArrayInOrder(Node? node, MyArray<T> result)
+        {
+            if (node == null) return;
+
+            ToArrayInOrder(node.left, result);
+            result.Add(node.data);
+            ToArrayInOrder(node.right, result);
+        }
+        public bool HasNext()
+        {
+            return iterator.HasNext();
+        }
+
+        public T Next()
+        {
+            return iterator.Next();
+        }
+
+        public void Reset()
+        {
+            iterator.Reset();
         }
     }
     
@@ -192,21 +229,47 @@ public class MyBinarySearchTree<T> : IMyCollection<T>
 
     public R Reduce<R>(Func<R, T, R> accumulator)
     {
-        throw new NotImplementedException();
+        return ReduceRecursive(default!, _root, accumulator);
+    }
+
+    private R ReduceRecursive<R>(R result, Node? node, Func<R, T, R> accumulator)
+    {
+        if (node == null) return result;
+
+        result = accumulator(result, node.data);
+
+        result = ReduceRecursive(result, node.left, accumulator);
+        result = ReduceRecursive(result, node.right, accumulator);
+
+        return result;
     }
 
     public R Reduce<R>(R initial, Func<R, T, R> accumulator)
     {
-        throw new NotImplementedException();
+        return ReduceRecursive(initial, _root, accumulator);
     }
 
     public IMyIterator<T> GetIterator()
     {
-        throw new NotImplementedException();
+        return new BinarySearchTreeIterator(_root);
     }
 
     public IEnumerator<T> GetEnumerator()
     {
-        throw new NotImplementedException();
+        IMyCollection<T> array = new MyArray<T>();
+
+        GetEnumeratorRecursive(_root, array);
+        
+        return array.GetEnumerator();
+    }
+
+    private void GetEnumeratorRecursive(Node? node, IMyCollection<T> array)
+    {
+        if (node == null) return;
+
+        array.Add(node.data);
+
+        GetEnumeratorRecursive(node.left, array);
+        GetEnumeratorRecursive(node.right, array);
     }
 }
