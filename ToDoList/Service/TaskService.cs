@@ -59,11 +59,18 @@ class TaskService : ITaskService
     public void RemoveTask(int id)
     {
         TaskItem? task = GetTaskById(id);
-        if (task != null)
+        if (task == null) return;
+
+        _tasks.Remove(task);
+
+        IMyIterator<TaskItem> iterator = _tasks.GetIterator();
+        while (iterator.HasNext())
         {
-            _tasks.Remove(task);
-            SaveTasks();
+            var t = iterator.Next();
+            t.DependantOn.Remove(id);
         }
+
+        SaveTasks();
     }
 
     public void UpdateTask(TaskItem task)
@@ -105,89 +112,84 @@ class TaskService : ITaskService
 
     public void RemoveDependency(TaskItem task, int dependencyId)
     {
-        if (GetTaskById(dependencyId) == null) return;
-
-        if (task.DependantOn.FindBy<int>(dependencyId, (t, id) => t == id) != 0)
-            task.DependantOn.Remove(dependencyId);
-
+        if (task == null) return;
+        task.DependantOn.Remove(dependencyId);
         SaveTasks();
     }
 
     public void AddDependency(TaskItem task, int dependencyId)
     {
+        if (task == null) return;
+        if (task.Id == dependencyId) return;
+
+        var existing = task.DependantOn.ToArray();
+        foreach (var d in existing) if (d == dependencyId) return;
+
         TaskItem? dependency = GetTaskById(dependencyId);
-        if (dependency == null || IsCircular(task.Id, dependency)) return;
+        if (dependency == null) return;
+
+        if (IsCircular(task.Id, dependency.Id)) return;
 
         task.DependantOn.Add(dependencyId);
         SaveTasks();
     }
 
-    public bool IsCircular(int taskId, TaskItem dependency, HashSet<int>? visited = null)
+    public bool IsCircular(int startTaskId, int currentTaskId, HashSet<int>? visited = null)
     {
         visited ??= new HashSet<int>();
 
-        if (!visited.Add(dependency.Id)) return false;
+        if (!visited.Add(currentTaskId)) return false;
 
-        if (dependency.DependantOn.FindBy<int>(taskId, (id, key) => id == key) != 0)
-            return true;
+        TaskItem? current = GetTaskById(currentTaskId);
+        if (current == null) return false;
 
-        IMyIterator<int> iterator = dependency.DependantOn.GetIterator();
-        while (iterator.HasNext())
+        var deps = current.DependantOn.ToArray();
+        foreach (var depId in deps)
         {
-            TaskItem? next = GetTaskById(iterator.Next());
-            if (next == null) continue;
-
-            if (IsCircular(taskId, next, visited))
-                return true;
+            if (depId == startTaskId) return true;
+            if (IsCircular(startTaskId, depId, visited)) return true;
         }
 
         return false;
     }
 
+    public bool IsCircular(int taskId, TaskItem next, HashSet<int>? visited = null)
+    {
+        if (next == null) return false;
+        return IsCircular(taskId, next.Id, visited);
+    }
+
     public bool CanStartTask(TaskItem item)
     {
-        int amountDone = 0;
-        IMyIterator<int> iterator = item.DependantOn.GetIterator();
-
-        while (iterator.HasNext())
+        if (item == null) return false;
+        var deps = item.DependantOn.ToArray();
+        foreach (var depId in deps)
         {
-            int taskId = iterator.Next();
-            TaskItem? dependency = GetTaskById(taskId);
-            if (dependency == null)
-            {
-                amountDone--;
-                continue;
-            }
-
-            if (dependency.Status == 1)
-            {
-                amountDone++;
-                continue;
-            }
-
-            amountDone--;
+            TaskItem? dependency = GetTaskById(depId);
+            if (dependency == null) return false;
+            if (dependency.Status != 1) return false;
         }
-
-        return amountDone >= item.DependantOn.Count;
+        return true;
     }
 
     public bool ToggleTaskStatus(int id, int status)
     {
         TaskItem? task = GetTaskById(id);
+        if (task == null) return false;
 
-        if (task != null && status < 2)
+        if (status == 1)
         {
-            if (CanStartTask(task))
-            {
-                task.Status = status;
-                SaveTasks();
-                return true;
-            }
-        }
-        else if (task != null)
-        {
-            task.Status = -1;
+            if (!CanStartTask(task)) return false;
+            task.Status = 1;
             SaveTasks();
+            return true;
+        }
+
+        if (status == 0 || status == -1)
+        {
+            task.Status = status;
+            SaveTasks();
+            return true;
         }
 
         return false;
