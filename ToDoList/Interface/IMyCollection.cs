@@ -1,4 +1,4 @@
-public interface IMyCollection<T>: IMyIterator<T>
+public interface IMyCollection<T>: IEnumerable<T>
 {
     void Add(T item);
     void Remove(T item);
@@ -10,5 +10,5 @@ public interface IMyCollection<T>: IMyIterator<T>
     R Reduce<R>(Func<R, T, R> accumulator);
     R Reduce<R>(R initial, Func<R, T, R> accumulator);
     IMyIterator<T> GetIterator();
-    IEnumerator<T> GetEnumerator();
+    T[] ToArray();
 }

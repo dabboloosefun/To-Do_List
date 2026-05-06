@@ -5,20 +5,11 @@ class TaskService : ITaskService
 {
     private readonly IRepository<TaskItem> _repository;
     private readonly IMyCollection<TaskItem> _tasks;
-    private readonly IMyHashMap<int, TaskItem> _taskIndex;
 
     public TaskService(IRepository<TaskItem> repository)
     {
         _repository = repository;
-        _tasks = new MyArray<TaskItem>();
-        _taskIndex = new MyHashMap<int, TaskItem>();
-
-        IEnumerable<TaskItem> loaded = _repository.Load();
-        foreach (var task in loaded)
-        {
-            _tasks.Add(task);
-            _taskIndex.Add(task.Id, task);
-        }
+        _tasks = _repository.Load()!;
     }
 
     public IEnumerable<TaskItem> GetAllTasks()
@@ -43,7 +34,10 @@ class TaskService : ITaskService
 
     public TaskItem? GetTaskById(int id)
     {
-        return _taskIndex.FindBy(id);
+        return _tasks.FindBy(id, (TaskItem a, int Id) => {
+            if (a.Id == Id) return true;
+            return false;
+        });
     }
 
     public void AddTask(string description, int priority, IMyCollection<int>? assignedMembers)
@@ -59,7 +53,6 @@ class TaskService : ITaskService
         };
 
         _tasks.Add(newTask);
-        _taskIndex.Add(newTask.Id, newTask);
         SaveTasks();
     }
 
@@ -69,7 +62,6 @@ class TaskService : ITaskService
         if (task != null)
         {
             _tasks.Remove(task);
-            _taskIndex.Remove(id);
             SaveTasks();
         }
     }
@@ -81,7 +73,6 @@ class TaskService : ITaskService
         {
             _tasks.Remove(existing);
             _tasks.Add(task);
-            _taskIndex.Add(task.Id, task);
             SaveTasks();
         }
     }
@@ -100,13 +91,7 @@ class TaskService : ITaskService
 
     private void SaveTasks()
     {
-        List<TaskItem> list = new List<TaskItem>();
-        IMyIterator<TaskItem> iterator = _tasks.GetIterator();
-        while (iterator.HasNext())
-        {
-            list.Add(iterator.Next());
-        }
-        _repository.Save(list);
+        _repository.Save(_tasks);
     }
 
     private IEnumerable<TaskItem> ConvertToEnumerable(IMyCollection<TaskItem> collection)

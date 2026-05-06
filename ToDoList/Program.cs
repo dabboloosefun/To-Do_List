@@ -1,10 +1,10 @@
 ﻿class Program {
     static void Main(string[] args){
-        // Dependency injection: wiring up our components
+        Format.TrueClear();
         Format.WriteTitle("SELECT YOUR COLLECTION TYPE");
 
         Format.WriteList([
-            "Array", "LinkedList", "BinaryTree", "HashMap", "Manage Task Dependency"
+            "Array", "LinkedList", "BinaryTree", "HashMap"
         ], (Console.WindowHeight - 4) / 2);
 
         int option = 0;
@@ -25,18 +25,9 @@
                 continue;
             }
         }
-        
 
-        string basePath = AppDomain.CurrentDomain.BaseDirectory;
-        string dataPath = Path.Combine(basePath, "Data");
-
-        Directory.CreateDirectory(dataPath);
-
-        string TfilePath = Path.Combine(dataPath, "tasks.json");
-        string MfilePath = Path.Combine(dataPath, "members.json");
-
-        IRepository<TaskItem> taskRepository = new JsonRepository<TaskItem>(TfilePath, option);
-        IRepository<Member> memberRepository = new JsonRepository<Member>(MfilePath, option);
+        IRepository<TaskItem> taskRepository = new JsonRepository<TaskItem>("./Data/tasks.json", option);
+        IRepository<Member> memberRepository = new JsonRepository<Member>("./Data/members.json", option);
 
         ITaskService taskService = new TaskService(taskRepository);
         IMemberService memberService = new MemberService(memberRepository);

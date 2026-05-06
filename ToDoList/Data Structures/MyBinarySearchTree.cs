@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Collections;
 
 public class MyBinarySearchTree<T> : IMyCollection<T>
 {
@@ -263,6 +264,11 @@ public class MyBinarySearchTree<T> : IMyCollection<T>
         return array.GetEnumerator();
     }
 
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
     private void GetEnumeratorRecursive(Node? node, IMyCollection<T> array)
     {
         if (node == null) return;
@@ -271,5 +277,12 @@ public class MyBinarySearchTree<T> : IMyCollection<T>
 
         GetEnumeratorRecursive(node.left, array);
         GetEnumeratorRecursive(node.right, array);
+    }
+
+    public T[] ToArray()
+    {
+        MyArray<T> array = new MyArray<T>();
+        GetEnumeratorRecursive(_root, array);
+        return array.ToArray();
     }
 }

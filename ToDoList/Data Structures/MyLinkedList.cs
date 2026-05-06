@@ -1,3 +1,5 @@
+using System.Collections;
+
 public class MyLinkedList<T> : IMyCollection<T>
 {
     private class Node
@@ -205,5 +207,21 @@ public class MyLinkedList<T> : IMyCollection<T>
             yield return current.Data;
             current = current.Next;
         }
+    }
+    public T[] ToArray()
+    {
+        T[] result = new T[_count];
+        int i = 0;
+        Node? current = _head;
+        while (current != null)
+        {
+            result[i++] = current.Data;
+            current = current.Next;
+        }
+        return result;
+    }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

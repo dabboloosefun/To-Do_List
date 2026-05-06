@@ -1,3 +1,5 @@
+using System.Collections;
+
 public class MyArray<T> : IMyCollection<T>
 {
     private T[] _items = new T[0];
@@ -163,5 +165,15 @@ public class MyArray<T> : IMyCollection<T>
         {
             yield return _items[i]!;
         }
+    }
+    public T[] ToArray()
+    {
+        T[] result = new T[_count];
+        for (int i = 0; i < _count; i++) result[i] = _items[i]!;
+        return result;
+    }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

@@ -2,15 +2,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public class MyHashMap<TKey, TValue> : IMyHashMap<TKey, TValue>
+public class MyHashMap<T> : IMyCollection<T> where T : IHasId
 {
     private class Entry
     {
-        public TKey Key { get; set; }
-        public TValue Value { get; set; }
+        public int Key { get; set; }
+        public T Value { get; set; }
         public Entry? Next { get; set; }
 
-        public Entry(TKey key, TValue value)
+        public Entry(int key, T value)
         {
             Key = key;
             Value = value;
@@ -18,7 +18,7 @@ public class MyHashMap<TKey, TValue> : IMyHashMap<TKey, TValue>
         }
     }
 
-    private class HashMapIterator : IMyIterator<KeyValuePair<TKey, TValue>>
+    private class HashMapIterator : IMyIterator<T>
     {
         private readonly Entry?[] _buckets;
         private int _bucketIndex;
@@ -47,12 +47,12 @@ public class MyHashMap<TKey, TValue> : IMyHashMap<TKey, TValue>
             return _current != null;
         }
 
-        public KeyValuePair<TKey, TValue> Next()
+        public T Next()
         {
             if (_current == null)
                 throw new InvalidOperationException("No more elements");
 
-            KeyValuePair<TKey, TValue> pair = new KeyValuePair<TKey, TValue>(_current.Key, _current.Value);
+            T value = _current.Value;
             _current = _current.Next;
 
             if (_current == null)
@@ -60,7 +60,7 @@ public class MyHashMap<TKey, TValue> : IMyHashMap<TKey, TValue>
                 MoveToNextAvailable();
             }
 
-            return pair;
+            return value;
         }
 
         public void Reset()
@@ -89,33 +89,38 @@ public class MyHashMap<TKey, TValue> : IMyHashMap<TKey, TValue>
         _dirty = false;
     }
 
-    private int GetBucketIndex(TKey key)
+    private int GetBucketIndex(int key)
     {
-        if (key == null)
-            throw new ArgumentNullException(nameof(key));
-
         int hash = key.GetHashCode();
         if (hash < 0) hash = -hash;
         return hash % _buckets.Length;
     }
 
-    public void Add(TKey key, TValue value)
+    // Convenience: add by T (uses item's Id)
+    public void Add(T item)
+    {
+        if (item == null) throw new ArgumentNullException(nameof(item));
+        Add(item.Id, item);
+    }
+
+    // Legacy/key-based add for compatibility
+    public void Add(int key, T item)
     {
         int index = GetBucketIndex(key);
         Entry? current = _buckets[index];
 
         while (current != null)
         {
-            if (EqualityComparer<TKey>.Default.Equals(current.Key, key))
+            if (current.Key == key)
             {
-                current.Value = value;
+                current.Value = item;
                 _dirty = true;
                 return;
             }
             current = current.Next;
         }
 
-        Entry newEntry = new Entry(key, value)
+        Entry newEntry = new Entry(key, item)
         {
             Next = _buckets[index]
         };
@@ -125,7 +130,15 @@ public class MyHashMap<TKey, TValue> : IMyHashMap<TKey, TValue>
         _dirty = true;
     }
 
-    public bool Remove(TKey key)
+    // Remove by item
+    public void Remove(T item)
+    {
+        if (item == null) throw new ArgumentNullException(nameof(item));
+        Remove(item.Id);
+    }
+
+    // Remove by key (legacy)
+    public bool Remove(int key)
     {
         int index = GetBucketIndex(key);
         Entry? current = _buckets[index];
@@ -133,7 +146,7 @@ public class MyHashMap<TKey, TValue> : IMyHashMap<TKey, TValue>
 
         while (current != null)
         {
-            if (EqualityComparer<TKey>.Default.Equals(current.Key, key))
+            if (current.Key == key)
             {
                 if (previous == null)
                 {
@@ -156,30 +169,122 @@ public class MyHashMap<TKey, TValue> : IMyHashMap<TKey, TValue>
         return false;
     }
 
-    public TValue? FindBy(TKey key)
+    // Generic FindBy using comparer
+    public T? FindBy<K>(K key, Func<T, K, bool> comparer)
     {
-        int index = GetBucketIndex(key);
-        Entry? current = _buckets[index];
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
 
-        while (current != null)
+        for (int i = 0; i < _buckets.Length; i++)
         {
-            if (EqualityComparer<TKey>.Default.Equals(current.Key, key))
+            Entry? current = _buckets[i];
+            while (current != null)
             {
-                return current.Value;
+                if (comparer(current.Value, key))
+                    return current.Value;
+                current = current.Next;
             }
-            current = current.Next;
         }
 
         return default;
     }
 
-    public bool ContainsKey(TKey key)
+    // Convenience: find by integer key
+    public T? FindBy(int key)
     {
-        return FindBy(key) != null;
+        int index = GetBucketIndex(key);
+        Entry? current = _buckets[index];
+        while (current != null)
+        {
+            if (current.Key == key) return current.Value;
+            current = current.Next;
+        }
+        return default;
     }
 
-    public IMyIterator<KeyValuePair<TKey, TValue>> GetIterator()
+    public IMyIterator<T> GetIterator()
     {
         return new HashMapIterator(_buckets, _buckets.Length);
     }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        for (int i = 0; i < _buckets.Length; i++)
+        {
+            Entry? current = _buckets[i];
+            while (current != null)
+            {
+                yield return current.Value;
+                current = current.Next;
+            }
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public IMyCollection<T> Filter(Func<T, bool> predicate)
+    {
+        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+        var result = new MyHashMap<T>(_buckets.Length);
+        foreach (var item in this)
+        {
+            if (predicate(item)) result.Add(item);
+        }
+        return result;
+    }
+
+    public void Sort(Comparison<T> comparison)
+    {
+        if (comparison == null) throw new ArgumentNullException(nameof(comparison));
+        var list = new List<T>();
+        foreach (var item in this) list.Add(item);
+        list.Sort(comparison);
+
+        // Clear buckets and re-add in sorted order
+        for (int i = 0; i < _buckets.Length; i++) _buckets[i] = null;
+        _count = 0;
+        foreach (var item in list) Add(item);
+        _dirty = true;
+    }
+
+    public R Reduce<R>(Func<R, T, R> accumulator)
+    {
+        if (accumulator == null) throw new ArgumentNullException(nameof(accumulator));
+        R result = default!;
+        foreach (var item in this)
+        {
+            result = accumulator(result, item);
+        }
+        return result;
+    }
+
+    public R Reduce<R>(R initial, Func<R, T, R> accumulator)
+    {
+        if (accumulator == null) throw new ArgumentNullException(nameof(accumulator));
+        R result = initial;
+        foreach (var item in this)
+        {
+            result = accumulator(result, item);
+        }
+        return result;
+    }
+
+    public T[] ToArray()
+    {
+        T[] result = new T[_count];
+        int i = 0;
+        for (int b = 0; b < _buckets.Length; b++)
+        {
+            Entry? current = _buckets[b];
+            while (current != null)
+            {
+                result[i++] = current.Value;
+                current = current.Next;
+            }
+        }
+        return result;
+    }
+
 }

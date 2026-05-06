@@ -2,21 +2,11 @@ public class MemberService : IMemberService
 {
     private readonly IRepository<Member> _repository;
     private readonly IMyCollection<Member> _Members;
-    private readonly IMyHashMap<int, Member> _memberIndex;
 
     public MemberService(IRepository<Member> repository)
     {
         _repository = repository;
-        _Members = new MyArray<Member>();
-        _memberIndex = new MyHashMap<int, Member>();
-
-        IEnumerable<Member> loaded = _repository.Load();
-
-        foreach (var member in loaded)
-        {
-            _Members.Add(member);
-            _memberIndex.Add(member.Id, member);
-        }
+        _Members = _repository.Load()!;
     }
 
     public IEnumerable<Member> GetAllMembers()
@@ -27,16 +17,18 @@ public class MemberService : IMemberService
     public void AddMember(string name, string password)
     {
         int newId = _Members.Count > 0 ? GetLastMemberId() + 1 : 1;
-        var newMember = new Member { Id = newId, Name = name, Password = password };
+        var newMember = new Member(newId, name, password);
 
         _Members.Add(newMember);
-        _memberIndex.Add(newMember.Id, newMember);
         SaveMembers();
     }
 
     public Member? GetMemberById(int id)
     {
-        return _memberIndex.FindBy(id);
+        return _Members.FindBy(id, (Member a, int Id) => {
+            if (a.Id == Id) return true;
+            return false;
+        });
     }
 
     public void RemoveMember(int id)
@@ -45,7 +37,6 @@ public class MemberService : IMemberService
         if (member != null)
         {
             _Members.Remove(member);
-            _memberIndex.Remove(id);
             SaveMembers();
         }
     }
@@ -78,13 +69,7 @@ public class MemberService : IMemberService
 
     private void SaveMembers()
     {
-        List<Member> list = new List<Member>();
-        IMyIterator<Member> iterator = _Members.GetIterator();
-        while (iterator.HasNext())
-        {
-            list.Add(iterator.Next());
-        }
-        _repository.Save(list);
+        _repository.Save(_Members);
     }
 
     private IEnumerable<Member> ConvertToEnumerable(IMyCollection<Member> collection)
