@@ -5,16 +5,19 @@ class TaskService : ITaskService
 {
     private readonly IRepository<TaskItem> _repository;
     private readonly IMyCollection<TaskItem> _tasks;
+    private readonly IMyHashMap<int, TaskItem> _taskIndex;
 
     public TaskService(IRepository<TaskItem> repository)
     {
         _repository = repository;
-        IEnumerable<TaskItem> loaded = _repository.Load();
         _tasks = new MyArray<TaskItem>();
+        _taskIndex = new MyHashMap<int, TaskItem>();
 
+        IEnumerable<TaskItem> loaded = _repository.Load();
         foreach (var task in loaded)
         {
             _tasks.Add(task);
+            _taskIndex.Add(task.Id, task);
         }
     }
 
@@ -40,12 +43,13 @@ class TaskService : ITaskService
 
     public TaskItem? GetTaskById(int id)
     {
-        return _tasks.FindBy(id, (task, key) => task.Id == key);
+        return _taskIndex.FindBy(id);
     }
 
     public void AddTask(string description, int priority, IMyCollection<int>? assignedMembers)
     {
         int newId = _tasks.Count > 0 ? GetLastTaskId() + 1 : 1;
+
         TaskItem newTask = new TaskItem(assignedMembers)
         {
             Id = newId,
@@ -53,7 +57,9 @@ class TaskService : ITaskService
             Status = -1,
             Priority = priority
         };
+
         _tasks.Add(newTask);
+        _taskIndex.Add(newTask.Id, newTask);
         SaveTasks();
     }
 
@@ -63,17 +69,19 @@ class TaskService : ITaskService
         if (task != null)
         {
             _tasks.Remove(task);
+            _taskIndex.Remove(id);
             SaveTasks();
         }
     }
 
     public void UpdateTask(TaskItem task)
     {
-        var existing = GetTaskById(task.Id);
+        TaskItem? existing = GetTaskById(task.Id);
         if (existing != null)
         {
             _tasks.Remove(existing);
             _tasks.Add(task);
+            _taskIndex.Add(task.Id, task);
             SaveTasks();
         }
     }
@@ -113,7 +121,10 @@ class TaskService : ITaskService
     public void RemoveDependency(TaskItem task, int dependencyId)
     {
         if (GetTaskById(dependencyId) == null) return;
-        if (task.DependantOn.FindBy<int>(dependencyId, (t, id) => t == id) != 0) task.DependantOn.Remove(dependencyId);
+
+        if (task.DependantOn.FindBy<int>(dependencyId, (t, id) => t == id) != 0)
+            task.DependantOn.Remove(dependencyId);
+
         SaveTasks();
     }
 
@@ -128,32 +139,24 @@ class TaskService : ITaskService
 
     public bool IsCircular(int taskId, TaskItem dependency, HashSet<int>? visited = null)
     {
-        bool isCircular = false;
-        visited ??= new HashSet<int>{};
+        visited ??= new HashSet<int>();
 
         if (!visited.Add(dependency.Id)) return false;
 
-        if (dependency.DependantOn.FindBy<int>(taskId, (id, taskId) => id == taskId) != 0)
-        {
-            isCircular = true;
-            return isCircular;
-        }
+        if (dependency.DependantOn.FindBy<int>(taskId, (id, key) => id == key) != 0)
+            return true;
 
-        IMyIterator<int> myIterator = dependency.DependantOn.GetIterator();
-
-        for (int i = 0; i < dependency.DependantOn.Count; i++)
+        IMyIterator<int> iterator = dependency.DependantOn.GetIterator();
+        while (iterator.HasNext())
         {
-            TaskItem? next = GetTaskById(myIterator.Next());
+            TaskItem? next = GetTaskById(iterator.Next());
             if (next == null) continue;
-            bool result = IsCircular(taskId, next, visited);
-            if (result == true)
-            {
-                isCircular = true;
-                break;
-            }
+
+            if (IsCircular(taskId, next, visited))
+                return true;
         }
 
-        return isCircular;
+        return false;
     }
 
     public bool CanStartTask(TaskItem item)
@@ -164,14 +167,14 @@ class TaskService : ITaskService
         while (iterator.HasNext())
         {
             int taskId = iterator.Next();
-            TaskItem? dependancy = GetTaskById(taskId);
-            if (dependancy == null)
+            TaskItem? dependency = GetTaskById(taskId);
+            if (dependency == null)
             {
                 amountDone--;
                 continue;
             }
 
-            if (dependancy.Status == 1)
+            if (dependency.Status == 1)
             {
                 amountDone++;
                 continue;
@@ -180,7 +183,7 @@ class TaskService : ITaskService
             amountDone--;
         }
 
-        return amountDone >= item.DependantOn.Count ? true : false;
+        return amountDone >= item.DependantOn.Count;
     }
 
     public bool ToggleTaskStatus(int id, int status)
