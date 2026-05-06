@@ -5,8 +5,8 @@ public class TaskItem
     public int Status { get; set; }
 
     public int Priority { get; set; }
-    public IMyIndexable<int> AssignedMembers { get; set; }
-    public IMyIndexable<int> DependantOn { get; set; }
+    public IMyCollection<int> AssignedMembers { get; set; }
+    public IMyCollection<int> DependantOn { get; set; }
     public DateTime CreationDate { get; set; }
 
     public TaskItem()
@@ -16,7 +16,7 @@ public class TaskItem
         DependantOn = new MyArray<int>();
     }
 
-    public TaskItem(IMyIndexable<int>? assignedMembers, IMyIndexable<int>? dependantOn = null)
+    public TaskItem(IMyCollection<int>? assignedMembers, IMyCollection<int>? dependantOn = null)
     {
         CreationDate = DateTime.Now;
         AssignedMembers = assignedMembers == null ? new MyArray<int>() : assignedMembers;

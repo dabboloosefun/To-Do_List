@@ -46,7 +46,7 @@ class TaskService : ITaskService
         return _taskIndex.FindBy(id);
     }
 
-    public void AddTask(string description, int priority, IMyIndexable<int>? assignedMembers)
+    public void AddTask(string description, int priority, IMyCollection<int>? assignedMembers)
     {
         int newId = _tasks.Count > 0 ? GetLastTaskId() + 1 : 1;
 

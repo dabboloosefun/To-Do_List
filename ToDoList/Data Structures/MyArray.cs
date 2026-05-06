@@ -1,29 +1,8 @@
-public class MyArray<T> : IMyIndexable<T>
+public class MyArray<T> : IMyCollection<T>
 {
     private T[] _items = new T[0];
     private int _count = 0;
 
-    public T this[int index]
-    {
-        get
-        {
-            if (index < 0 || index >= _count)
-            {
-                throw new IndexOutOfRangeException();
-            }
-            return _items[index];
-        }
-
-        set
-        {
-            if (index < 0 || index >= _count)
-            {
-                throw new IndexOutOfRangeException();
-            }
-            _items[index] = value;
-            Dirty = true;
-        }
-    }
     public int Count
     {
         get { return _count; }
@@ -106,7 +85,7 @@ public class MyArray<T> : IMyIndexable<T>
         Dirty = true;
     }
 
-    public T FindBy<K>(K key, Func<T, K, bool> comparer)
+    public T? FindBy<K>(K key, Func<T, K, bool> comparer)
     {
         for (int i = 0; i < _count; i++)
         {
@@ -115,7 +94,7 @@ public class MyArray<T> : IMyIndexable<T>
                 return _items[i];
             }
         }
-        return default!;
+        return default;
     }
 
     public IMyCollection<T> Filter(Func<T, bool> predicate)

@@ -1,6 +1,7 @@
 ﻿class Program {
     static void Main(string[] args){
         // Dependency injection: wiring up our components
+        
         string basePath = AppDomain.CurrentDomain.BaseDirectory;
         string dataPath = Path.Combine(basePath, "Data");
 
