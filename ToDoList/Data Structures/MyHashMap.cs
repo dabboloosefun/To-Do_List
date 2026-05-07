@@ -96,14 +96,12 @@ public class MyHashMap<T> : IMyCollection<T> where T : IHasId
         return hash % _buckets.Length;
     }
 
-    // Convenience: add by T (uses item's Id)
     public void Add(T item)
     {
         if (item == null) throw new ArgumentNullException(nameof(item));
         Add(item.Id, item);
     }
 
-    // Legacy/key-based add for compatibility
     public void Add(int key, T item)
     {
         int index = GetBucketIndex(key);
@@ -130,14 +128,12 @@ public class MyHashMap<T> : IMyCollection<T> where T : IHasId
         _dirty = true;
     }
 
-    // Remove by item
     public void Remove(T item)
     {
         if (item == null) throw new ArgumentNullException(nameof(item));
         Remove(item.Id);
     }
 
-    // Remove by key (legacy)
     public bool Remove(int key)
     {
         int index = GetBucketIndex(key);
@@ -169,7 +165,6 @@ public class MyHashMap<T> : IMyCollection<T> where T : IHasId
         return false;
     }
 
-    // Generic FindBy using comparer
     public T? FindBy<K>(K key, Func<T, K, bool> comparer)
     {
         if (comparer == null) throw new ArgumentNullException(nameof(comparer));
@@ -188,7 +183,6 @@ public class MyHashMap<T> : IMyCollection<T> where T : IHasId
         return default;
     }
 
-    // Convenience: find by integer key
     public T? FindBy(int key)
     {
         int index = GetBucketIndex(key);
@@ -242,7 +236,6 @@ public class MyHashMap<T> : IMyCollection<T> where T : IHasId
         foreach (var item in this) list.Add(item);
         list.Sort(comparison);
 
-        // Clear buckets and re-add in sorted order
         for (int i = 0; i < _buckets.Length; i++) _buckets[i] = null;
         _count = 0;
         foreach (var item in list) Add(item);
