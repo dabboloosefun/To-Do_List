@@ -7,6 +7,8 @@
             "Array", "LinkedList", "BinaryTree", "HashMap"
         ], (Console.WindowHeight - 4) / 2);
 
+        Console.WriteLine();
+
         int option = 0;
         while (option <= 0)
         {

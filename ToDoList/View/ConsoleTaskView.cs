@@ -74,6 +74,10 @@ public class ConsoleTaskView : ITaskView
                     break;
 
                 case "8":
+                    options.AddMember();
+                    break;
+
+                case "9":
                     Console.ResetColor();
                     Format.TrueClear();
                     return;

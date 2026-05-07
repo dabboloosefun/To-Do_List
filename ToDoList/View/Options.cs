@@ -158,8 +158,8 @@ public class Options
         Format.WriteTitle($"Currently logged in as {_member.Name} [{_member.Id}]");
 
         Format.WriteList([
-            "Add Task", "Remove Task", "Toggle Task Status", "Manage Task Assignment", "Manage Task Dependency", "Filter", "Show Dependencies", "Exit"
-        ], (Console.WindowHeight - 8) / 2);
+            "Add Task", "Remove Task", "Toggle Task Status", "Manage Task Assignment", "Manage Task Dependency", "Filter", "Show Dependencies", "Add Member", "Exit"
+        ], (Console.WindowHeight - 9) / 2);
 
         return Format.PromptReadKey("Select an option: ");
     }
@@ -456,5 +456,22 @@ public class Options
                 Console.WriteLine("Invalid filter option.");
                 break;
         }
+    }
+
+    public void AddMember()
+    {
+        Format.TrueClear();
+        Format.WriteTitle("REGISTER");
+        Format.CentreCursor();
+
+        string name = Format.Prompt("Enter member name: ");
+
+        Format.TrueClear();
+        Format.WriteTitle("REGISTER");
+        Format.CentreCursor();
+
+        string password = Format.Prompt("Enter member password: ", true);
+
+        _memberService.AddMember(name, password);   
     }
 }

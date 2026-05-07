@@ -15,9 +15,6 @@ class JsonRepository<T> : IRepository<T>  where T : IHasId{
 
         var tasks = JsonSerializer.Deserialize<List<T>>(json);
 
-        Console.WriteLine(_filePath + " " + _option);
-        Console.WriteLine(File.Exists(_filePath));
-
         if (File.Exists(_filePath)) 
         {
             switch (_option)
